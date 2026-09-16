@@ -1,1 +1,1135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>AI 音樂生成工作室</title>
 
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#0b0d12;
+  --panel:#141821;
+  --panel2:#10141c;
+  --border:#2b3240;
+  --text:#f5f7fb;
+  --muted:#aeb6c7;
+  --soft:#7f899b
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(110,90,255,.16),transparent 32%),
+    radial-gradient(circle at 100% 12%,rgba(0,190,255,.10),transparent 26%),
+    var(--bg);
+  color:var(--text)
+}
+
+button,input,textarea,select{font:inherit}
+
+button{touch-action:manipulation}
+
+.app-shell{
+  max-width:1120px;
+  margin:auto;
+  padding:28px 18px 64px
+}
+
+.hero{margin-bottom:18px}
+
+.eyebrow-row{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
+.eyebrow{
+  letter-spacing:.18em;
+  font-size:12px;
+  opacity:.65;
+  margin:0
+}
+
+.badge,.status-pill{
+  display:inline-flex;
+  align-items:center;
+  border:1px solid #3a4353;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  color:#dbe2ee;
+  white-space:nowrap
+}
+
+h1{
+  font-size:clamp(34px,7vw,62px);
+  margin:10px 0;
+  line-height:1.02
+}
+
+.sub{
+  max-width:760px;
+  color:var(--muted);
+  margin:0;
+  line-height:1.65
+}
+
+.status-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  background:linear-gradient(135deg,#171c27,#10141c);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 18px;
+  margin:18px 0
+}
+
+.status-card p{
+  margin:5px 0 0;
+  color:var(--muted)
+}
+
+.panel{
+  background:rgba(20,24,33,.94);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 14px 36px rgba(0,0,0,.18)
+}
+
+.preset-panel{margin-bottom:18px}
+
+.step{
+  font-size:11px;
+  letter-spacing:.16em;
+  color:#8f99aa;
+  margin:0 0 7px
+}
+
+h2{
+  margin:0 0 12px;
+  font-size:21px
+}
+
+.preset-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px
+}
+
+.preset{
+  background:#1b2130;
+  color:#f5f7fb;
+  border:1px solid #333c4e;
+  border-radius:14px;
+  padding:13px 12px;
+  text-align:left;
+  font-weight:700;
+  cursor:pointer
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:18px
+}
+
+label{
+  display:block;
+  margin:15px 0 7px;
+  color:#cbd2df;
+  font-size:14px
+}
+
+input,textarea,select{
+  width:100%;
+  background:#0e1118;
+  color:#f5f7fb;
+  border:1px solid #353c4a;
+  border-radius:12px;
+  padding:12px 13px;
+  outline:none
+}
+
+input:focus,textarea:focus,select:focus{
+  border-color:#6f7d96
+}
+
+textarea{
+  resize:vertical;
+  min-height:240px
+}
+
+.small-textarea{
+  min-height:110px
+}
+
+.two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap
+}
+
+button{
+  border:0;
+  border-radius:12px;
+  padding:11px 16px;
+  font-weight:750;
+  cursor:pointer
+}
+
+.primary{
+  background:#fff;
+  color:#101218;
+  font-size:16px;
+  padding:14px 20px
+}
+
+.secondary{
+  background:#2a3040;
+  color:#fff
+}
+
+.ghost{
+  background:transparent;
+  color:#cfd6e4;
+  border:1px solid #394151
+}
+
+.tiny{
+  padding:8px 11px;
+  font-size:13px
+}
+
+.action-panel{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-top:18px
+}
+
+.action-panel p{
+  margin-bottom:0;
+  color:var(--muted)
+}
+
+.result{margin-top:18px}
+
+.hidden{display:none}
+
+.section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px
+}
+
+pre{
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:#0d1016;
+  border:1px solid #303744;
+  border-radius:14px;
+  padding:16px;
+  color:#dce3ef;
+  line-height:1.6;
+  max-height:520px;
+  overflow:auto
+}
+
+.api-box{
+  margin-top:18px;
+  padding:16px;
+  border-radius:15px;
+  background:#10141c;
+  border:1px dashed #394151;
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:center
+}
+
+.api-box p{
+  margin:5px 0 0;
+  color:var(--muted);
+  line-height:1.55
+}
+
+.disabled-button{
+  background:#222836;
+  color:#70798a;
+  cursor:not-allowed
+}
+
+.history-panel{
+  margin-top:18px
+}
+
+.history-list{
+  display:grid;
+  gap:10px
+}
+
+.history-item{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+  border:1px solid #2e3543;
+  background:#10141c;
+  border-radius:14px;
+  padding:13px 14px
+}
+
+.history-item h3{
+  margin:0 0 4px;
+  font-size:15px
+}
+
+.history-item p{
+  margin:0;
+  color:#8f99aa;
+  font-size:13px
+}
+
+.history-item button{
+  padding:8px 10px;
+  background:#232a38;
+  color:#e7ebf2
+}
+
+.empty{
+  color:#7f899b;
+  margin:4px 0
+}
+
+footer{
+  margin-top:20px;
+  text-align:center;
+  color:#7f899b;
+  font-size:13px;
+  line-height:1.6
+}
+
+@media(max-width:820px){
+  .grid{grid-template-columns:1fr}
+  .preset-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:600px){
+  .app-shell{padding:20px 14px 44px}
+  .panel{padding:16px;border-radius:17px}
+  .status-card,.action-panel,.api-box{
+    align-items:stretch;
+    flex-direction:column
+  }
+  .primary{width:100%}
+  .two-col{grid-template-columns:1fr}
+  .preset-grid{grid-template-columns:1fr}
+  .section-head{align-items:center}
+  h1{font-size:40px}
+}
+</style>
+</head>
+
+<body>
+<main class="app-shell">
+
+<header class="hero">
+  <div class="eyebrow-row">
+    <p class="eyebrow">AI MUSIC STUDIO</p>
+    <span class="badge">v0.2</span>
+  </div>
+
+  <h1>AI 音樂生成工作室</h1>
+
+  <p class="sub">
+    先建立完整歌曲製作任務；
+    下一階段接安全後端 API 後即可真正生成歌曲。
+  </p>
+</header>
+
+<section class="status-card">
+  <div>
+    <strong>目前狀態</strong>
+    <p>前端工作室已可使用，真正音樂生成 API 尚未連接。</p>
+  </div>
+  <span class="status-pill">前端可用</span>
+</section>
+
+<section class="panel preset-panel">
+  <p class="step">快速預設</p>
+  <h2>一鍵套用歌曲方向</h2>
+
+  <div class="preset-grid">
+    <button class="preset" data-preset="maozhang">🐾 貓掌江湖・極武篇</button>
+    <button class="preset" data-preset="taiwanese">🎙️ 台語女聲流行</button>
+    <button class="preset" data-preset="epic">⚔️ 電影級史詩武俠</button>
+    <button class="preset" data-preset="ballad">🌙 月夜古風抒情</button>
+  </div>
+</section>
+
+<section class="grid">
+
+<article class="panel">
+  <p class="step">STEP 1</p>
+  <h2>歌曲與歌詞</h2>
+
+  <label for="title">歌曲名稱</label>
+  <input id="title" placeholder="例如：月下琉璃">
+
+  <label for="lyrics">歌詞</label>
+  <textarea
+    id="lyrics"
+    rows="14"
+    placeholder="貼上或輸入你的歌詞…"></textarea>
+
+  <div class="row">
+    <button id="demoLyrics" class="secondary">放入示範歌詞</button>
+    <button id="clearLyrics" class="ghost">清空</button>
+  </div>
+</article>
+
+<article class="panel">
+  <p class="step">STEP 2</p>
+  <h2>音樂設定</h2>
+
+  <label for="style">曲風</label>
+  <select id="style">
+    <option>電影級武俠</option>
+    <option>台語流行</option>
+    <option>史詩搖滾</option>
+    <option>電子國風</option>
+    <option>抒情古風</option>
+    <option>暗黑交響</option>
+    <option>電影配樂</option>
+  </select>
+
+  <label for="language">演唱語言</label>
+  <select id="language">
+    <option value="zh-tw">繁體中文</option>
+    <option value="nan-tw">台語</option>
+    <option value="mix">中文＋台語混合</option>
+  </select>
+
+  <label for="voice">聲線</label>
+  <select id="voice">
+    <option>女聲・清亮</option>
+    <option>女聲・霸氣</option>
+    <option>女聲・低沉</option>
+    <option>女聲・戲曲感</option>
+    <option>女聲・溫柔</option>
+  </select>
+
+  <label for="mood">情緒</label>
+  <select id="mood">
+    <option>氣勢磅礡</option>
+    <option>神秘</option>
+    <option>悲壯</option>
+    <option>熱血</option>
+    <option>溫柔</option>
+    <option>空靈</option>
+  </select>
+
+  <div class="two-col">
+    <div>
+      <label for="duration">預計長度</label>
+      <select id="duration">
+        <option value="60">約 1 分鐘</option>
+        <option value="120">約 2 分鐘</option>
+        <option value="180" selected>約 3 分鐘</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="tempo">速度</label>
+      <select id="tempo">
+        <option>慢板</option>
+        <option selected>中板</option>
+        <option>快板</option>
+        <option>自由速度</option>
+      </select>
+    </div>
+  </div>
+
+  <label for="notes">額外要求</label>
+  <textarea
+    id="notes"
+    class="small-textarea"
+    rows="5"
+    placeholder="例如：副歌要有記憶點、前奏 8 秒內進主題"></textarea>
+</article>
+
+</section>
+
+<section class="panel action-panel">
+  <div>
+    <p class="step">STEP 3</p>
+    <h2>建立歌曲製作任務</h2>
+    <p id="status">
+      完成設定後，先建立可保存、複製與匯出的歌曲生成任務。
+    </p>
+  </div>
+
+  <button id="generate" class="primary">
+    建立製作任務
+  </button>
+</section>
+
+<section id="result" class="panel result hidden">
+
+  <div class="section-head">
+    <div>
+      <p class="step">RESULT</p>
+      <h2>歌曲生成提示</h2>
+    </div>
+
+    <span class="status-pill">
+      可複製到其他音樂 AI
+    </span>
+  </div>
+
+  <pre id="resultText"></pre>
+
+  <div class="row">
+    <button id="copyPrompt" class="secondary">
+      複製提示詞
+    </button>
+
+    <button id="downloadTask" class="ghost">
+      下載 JSON
+    </button>
+
+    <button id="saveTask" class="ghost">
+      儲存到本機
+    </button>
+  </div>
+
+  <div class="api-box">
+
+    <div>
+      <strong>真正生成歌曲</strong>
+      <p>
+        GitHub Pages 是純前端網站，
+        API 金鑰不能直接放在這裡。
+        下一版會接安全後端，再啟用這個按鈕。
+      </p>
+    </div>
+
+    <button class="disabled-button" disabled>
+      生成歌曲（待接 API）
+    </button>
+
+  </div>
+
+</section>
+
+<section class="panel history-panel">
+
+  <div class="section-head">
+
+    <div>
+      <p class="step">PROJECTS</p>
+      <h2>最近儲存</h2>
+    </div>
+
+    <button id="clearHistory" class="ghost tiny">
+      清除
+    </button>
+
+  </div>
+
+  <div id="history" class="history-list">
+
+    <p class="empty">
+      目前沒有儲存的歌曲任務。
+    </p>
+
+  </div>
+
+</section>
+
+<footer>
+AI Music Studio v0.2 ·
+下一階段：安全後端 API、真正生成歌曲、線上播放與 MP3 下載。
+</footer>
+
+</main>
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const demoLyrics = `月落琉璃映孤城，
+風過長夜問前程。
+一扇清光開劍境，
+半生霜雪化星辰。
+
+若問此身何處去，
+且將孤影寄長風。
+月華照盡千山雪，
+一念琉璃破夜空。`;
+
+const presets = {
+
+  maozhang:{
+    title:"極武天命",
+    style:"電影級武俠",
+    language:"nan-tw",
+    voice:"女聲・霸氣",
+    mood:"氣勢磅礡",
+    duration:"180",
+    tempo:"中板",
+    notes:"電影級布袋戲武俠氣勢；女聲主唱；前奏快速建立世界觀；副歌要有強烈記憶點；適合《貓掌江湖・極武篇》角色登場與戰鬥剪輯。"
+  },
+
+  taiwanese:{
+    title:"月下心聲",
+    style:"台語流行",
+    language:"nan-tw",
+    voice:"女聲・溫柔",
+    mood:"溫柔",
+    duration:"180",
+    tempo:"中板",
+    notes:"台語女聲自然咬字；旋律順口；主歌敘事、副歌明確；避免過度複雜編曲。"
+  },
+
+  epic:{
+    title:"天境決",
+    style:"史詩搖滾",
+    language:"zh-tw",
+    voice:"女聲・霸氣",
+    mood:"熱血",
+    duration:"180",
+    tempo:"快板",
+    notes:"大鼓、弦樂、低頻與東方元素並用；開頭 8 秒內進入主題；副歌要有大型電影預告感。"
+  },
+
+  ballad:{
+    title:"月下琉璃",
+    style:"抒情古風",
+    language:"zh-tw",
+    voice:"女聲・清亮",
+    mood:"空靈",
+    duration:"180",
+    tempo:"慢板",
+    notes:"古風但不老派；留白多、旋律清楚；副歌有抬升感；適合月夜、琉璃、孤城意象。"
+  }
+
+};
+
+function setPreset(key){
+
+  const p = presets[key];
+
+  if(!p) return;
+
+  $("title").value = p.title;
+  $("style").value = p.style;
+  $("language").value = p.language;
+  $("voice").value = p.voice;
+  $("mood").value = p.mood;
+  $("duration").value = p.duration;
+  $("tempo").value = p.tempo;
+  $("notes").value = p.notes;
+
+  $("status").textContent =
+    `已套用「${p.title}」預設，可直接填歌詞後建立任務。`;
+
+}
+
+document
+.querySelectorAll(".preset")
+.forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    setPreset(btn.dataset.preset);
+
+  });
+
+});
+
+$("demoLyrics").addEventListener("click",()=>{
+
+  if(!$("title").value.trim()){
+
+    $("title").value = "月下琉璃";
+
+  }
+
+  $("lyrics").value = demoLyrics;
+
+});
+
+$("clearLyrics").addEventListener("click",()=>{
+
+  $("title").value = "";
+  $("lyrics").value = "";
+  $("notes").value = "";
+
+  $("status").textContent =
+    "已清空歌曲資料。";
+
+});
+
+function languageLabel(value){
+
+  return {
+
+    "zh-tw":"繁體中文",
+
+    "nan-tw":"台語",
+
+    "mix":"中文＋台語混合"
+
+  }[value] || value;
+
+}
+
+function buildTask(){
+
+  const title =
+    $("title").value.trim() || "未命名歌曲";
+
+  const lyrics =
+    $("lyrics").value.trim();
+
+  if(!lyrics){
+
+    throw new Error("請先輸入歌詞。");
+
+  }
+
+  const task = {
+
+    version:"0.2",
+
+    created_at:
+      new Date().toISOString(),
+
+    title:title,
+
+    style:
+      $("style").value,
+
+    language:
+      languageLabel(
+        $("language").value
+      ),
+
+    voice:
+      $("voice").value,
+
+    mood:
+      $("mood").value,
+
+    tempo:
+      $("tempo").value,
+
+    duration_seconds:
+      Number(
+        $("duration").value
+      ),
+
+    notes:
+      $("notes").value.trim(),
+
+    lyrics:lyrics
+
+  };
+
+  task.generation_prompt = [
+
+    `【歌曲名稱】${task.title}`,
+
+    `【曲風】${task.style}`,
+
+    `【演唱語言】${task.language}`,
+
+    `【聲線】${task.voice}`,
+
+    `【情緒】${task.mood}`,
+
+    `【速度】${task.tempo}`,
+
+    `【預計長度】約 ${task.duration_seconds} 秒`,
+
+    "",
+
+    "【製作要求】",
+
+    "主歌、副歌層次清楚；旋律具有記憶點；人聲要能清楚聽見歌詞；避免過度擁擠的編曲。",
+
+    "若用於短影音，前 8–12 秒需有足以吸引觀眾的旋律或節奏鉤子。",
+
+    task.notes
+      ? `額外要求：${task.notes}`
+      : "",
+
+    "",
+
+    "【歌詞】",
+
+    task.lyrics
+
+  ]
+  .filter(Boolean)
+  .join("\\n");
+
+  return task;
+
+}
+
+$("generate").addEventListener("click",()=>{
+
+  try{
+
+    window.currentTask =
+      buildTask();
+
+    $("resultText").textContent =
+      window.currentTask
+      .generation_prompt;
+
+    $("result")
+      .classList
+      .remove("hidden");
+
+    $("status").textContent =
+      "製作任務已建立。你可以複製、下載 JSON 或儲存到本機。";
+
+    $("result").scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+  }
+
+  catch(error){
+
+    $("status").textContent =
+      error.message;
+
+  }
+
+});
+
+$("copyPrompt").addEventListener("click",async()=>{
+
+  if(!window.currentTask) return;
+
+  try{
+
+    await navigator.clipboard.writeText(
+      window.currentTask
+      .generation_prompt
+    );
+
+    $("copyPrompt")
+      .textContent = "已複製";
+
+    setTimeout(()=>{
+
+      $("copyPrompt")
+        .textContent =
+        "複製提示詞";
+
+    },1200);
+
+  }
+
+  catch{
+
+    $("copyPrompt")
+      .textContent =
+      "請手動複製";
+
+  }
+
+});
+
+$("downloadTask").addEventListener("click",()=>{
+
+  if(!window.currentTask) return;
+
+  const safe =
+    (window.currentTask.title || "music-task")
+    .replace(/[\\/:*?"<>|]+/g,"-");
+
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          window.currentTask,
+          null,
+          2
+        )
+      ],
+      {
+        type:"application/json"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    `${safe}.json`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+});
+
+const storageKey =
+  "aiMusicStudioHistory";
+
+function loadHistory(){
+
+  try{
+
+    return JSON.parse(
+      localStorage.getItem(
+        storageKey
+      ) || "[]"
+    );
+
+  }
+
+  catch{
+
+    return [];
+
+  }
+
+}
+
+function writeHistory(list){
+
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify(
+      list.slice(0,8)
+    )
+  );
+
+  renderHistory();
+
+}
+
+$("saveTask").addEventListener("click",()=>{
+
+  if(!window.currentTask) return;
+
+  const history =
+    loadHistory();
+
+  history.unshift(
+    window.currentTask
+  );
+
+  writeHistory(history);
+
+  $("saveTask")
+    .textContent =
+    "已儲存";
+
+  setTimeout(()=>{
+
+    $("saveTask")
+      .textContent =
+      "儲存到本機";
+
+  },1200);
+
+});
+
+$("clearHistory").addEventListener("click",()=>{
+
+  localStorage.removeItem(
+    storageKey
+  );
+
+  renderHistory();
+
+});
+
+function escapeHtml(value){
+
+  return String(value)
+  .replace(
+    /[&<>"']/g,
+    ch=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[ch])
+  );
+
+}
+
+function renderHistory(){
+
+  const list =
+    loadHistory();
+
+  const box =
+    $("history");
+
+  if(!list.length){
+
+    box.innerHTML =
+      '<p class="empty">目前沒有儲存的歌曲任務。</p>';
+
+    return;
+
+  }
+
+  box.innerHTML =
+    list.map((item,index)=>`
+
+      <div class="history-item">
+
+        <div>
+
+          <h3>
+            ${escapeHtml(
+              item.title ||
+              "未命名歌曲"
+            )}
+          </h3>
+
+          <p>
+
+          ${escapeHtml(
+            item.style || ""
+          )}
+
+          ·
+
+          ${escapeHtml(
+            item.language || ""
+          )}
+
+          ·
+
+          ${Math.round(
+            (item.duration_seconds || 0)
+            /60
+          )} 分鐘
+
+          </p>
+
+        </div>
+
+        <button data-load="${index}">
+          載入
+        </button>
+
+      </div>
+
+    `).join("");
+
+  box
+  .querySelectorAll("[data-load]")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+
+        const item =
+          list[
+            Number(
+              btn.dataset.load
+            )
+          ];
+
+        if(!item) return;
+
+        $("title").value =
+          item.title || "";
+
+        $("lyrics").value =
+          item.lyrics || "";
+
+        $("style").value =
+          item.style ||
+          "電影級武俠";
+
+        $("language").value =
+          item.language === "台語"
+          ? "nan-tw"
+          :
+          item.language ===
+          "中文＋台語混合"
+          ? "mix"
+          :
+          "zh-tw";
+
+        $("voice").value =
+          item.voice ||
+          "女聲・清亮";
+
+        $("mood").value =
+          item.mood ||
+          "氣勢磅礡";
+
+        $("tempo").value =
+          item.tempo ||
+          "中板";
+
+        $("duration").value =
+          String(
+            item.duration_seconds
+            || 180
+          );
+
+        $("notes").value =
+          item.notes || "";
+
+        $("status").textContent =
+          `已載入「${item.title}」。`;
+
+        window.scrollTo({
+          top:0,
+          behavior:"smooth"
+        });
+
+      }
+    );
+
+  });
+
+}
+
+renderHistory();
+
+</script>
+
+</body>
+</html>
