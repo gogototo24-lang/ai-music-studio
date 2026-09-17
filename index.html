@@ -44,7 +44,12 @@ audio{width:100%}
 
 <div class="card">
 <h2>1. 歌曲與歌詞</h2>
+<label>歌曲主題</label>
+<input id="theme" placeholder="例如：月下琉璃、魔佛波旬、江湖決戰">
 
+<button class="primary" onclick="autoLyrics()">
+✨ 自動生成歌詞
+</button>
 <label>歌曲名稱</label>
 <input id="title" placeholder="例如：月下琉璃">
 
@@ -297,6 +302,136 @@ async function generateSong(){
   $("genStatus").className="status err";
  }
 }
+ function autoLyrics(){
+
+ const theme =
+ $("theme").value.trim() || "月下江湖";
+
+ const lang =
+ $("language").value;
+
+ const style =
+ $("style").value;
+
+ const mood =
+ $("mood").value;
+
+ const title =
+ theme.length > 8
+ ? theme.slice(0,8)
+ : theme;
+
+ $("title").value = title;
+
+ let lyrics = "";
+
+ if(lang === "台語"){
+
+lyrics =
+`【主歌一】
+月光照落 ${theme} 的路
+風聲陪阮行過暗暝
+一步一念無人知影
+心內的火猶原袂停
+
+【預副歌】
+天地若問阮欲去佗位
+阮用性命寫落答案
+
+【副歌】
+${theme} 啊　風雨嘛袂驚
+一念堅持行過千山萬嶺
+命運若欲阻擋阮的路
+阮就一刀破開天命
+
+${theme} 啊　天地做證明
+孤單的影嘛有自己的光
+就算最後只賰一個人
+阮嘛欲行到天光
+
+【主歌二】
+舊夢親像風吹過城牆
+往事留佇心內無聲
+江湖的人來來去去
+只有信念永遠袂變
+
+【橋段】
+若是命運早就寫好
+阮就親手改寫最後一頁
+
+【最終副歌】
+${theme} 啊　風雨嘛袂驚
+一念堅持行過千山萬嶺
+天地若欲封鎖阮的路
+阮就用心破開天命
+
+【尾聲】
+月光猶原照落江湖
+阮的名字留佇風中`;
+
+ }
+
+ else{
+
+lyrics =
+`【主歌一】
+月光落在 ${theme} 的長夜
+風穿過沉默的城
+一步一念走過歲月
+心中的火仍未熄滅
+
+【預副歌】
+若天地問我將往何方
+我用此生寫下答案
+
+【副歌】
+${theme}　穿越風雨而來
+一念不滅跨過萬里塵埃
+若命運擋住前方的路
+我便親手改寫未來
+
+${theme}　讓天地明白
+孤獨的身影也能化成光
+縱使最後只剩一人
+依然走到天亮
+
+【主歌二】
+舊夢掠過斑駁城牆
+往事沉在無聲夜裡
+江湖多少來去身影
+只有信念從未離去
+
+【橋段】
+如果命運早已寫下終局
+那就由我撕去最後一頁
+
+【最終副歌】
+${theme}　穿越風雨而來
+一念不滅跨過萬里塵埃
+若天地封住前方的路
+我便以心破開天命
+
+【尾聲】
+月光仍照著這片江湖
+我的名字留在風中`;
+
+ }
+
+ $("lyrics").value = lyrics;
+
+ $("notes").value =
+ `${style}，${mood}。
+主歌到副歌情緒逐步提升，
+副歌要有強烈記憶點，
+適合短影音與角色登場。`;
+
+ $("status").textContent =
+ "✨ 已自動生成完整歌詞，可以直接修改或建立歌曲提示詞。";
+
+ $("status").className =
+ "status ok";
+
+ }
 </script>
 
 </body>
