@@ -1,1 +1,303 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 音樂生成工作室 v0.3</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0d12;color:#fff;font-family:system-ui,"Noto Sans TC",sans-serif}
+main{max-width:850px;margin:auto;padding:20px 14px 60px}
+h1{font-size:36px;margin:10px 0}
+small,p{color:#aab3c2}
+.card{background:#151922;border:1px solid #303747;border-radius:16px;padding:16px;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;margin:12px 0 5px;color:#cbd2df}
+input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #3b4454;background:#0e1118;color:#fff;font:inherit}
+textarea{min-height:150px}
+button{padding:11px 13px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#fff;color:#111}
+.secondary{background:#293142;color:#fff;margin:5px 5px 0 0}
+.status{margin-top:12px;padding:11px;border-radius:10px;background:#10151d;border:1px solid #323b4c;color:#aeb6c7}
+.ok{color:#b7efd0;border-color:#315a43}
+.err{color:#ffc0c8;border-color:#713f48}
+.hidden{display:none}
+pre{white-space:pre-wrap;background:#0c1016;padding:12px;border-radius:10px}
+audio{width:100%}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
 
+<body>
+<main>
+
+<small>AI MUSIC STUDIO · v0.3</small>
+<h1>AI 音樂生成工作室</h1>
+<p>輸入歌詞、選擇台語／國語與曲風。已連接 Cloudflare Worker 架構。</p>
+
+<div class="card">
+<h2>快速預設</h2>
+<button class="secondary" onclick="preset('cat')">🐾 貓掌江湖・極武篇</button>
+<button class="secondary" onclick="preset('tw')">🎙️ 台語女聲</button>
+<button class="secondary" onclick="preset('epic')">⚔️ 史詩武俠</button>
+</div>
+
+<div class="card">
+<h2>1. 歌曲與歌詞</h2>
+
+<label>歌曲名稱</label>
+<input id="title" placeholder="例如：月下琉璃">
+
+<label>歌詞</label>
+<textarea id="lyrics" placeholder="輸入歌詞"></textarea>
+</div>
+
+<div class="card">
+<h2>2. 音樂設定</h2>
+
+<div class="grid">
+
+<div>
+<label>曲風</label>
+<select id="style">
+<option>電影級武俠</option>
+<option>台語流行</option>
+<option>史詩搖滾</option>
+<option>抒情古風</option>
+</select>
+</div>
+
+<div>
+<label>語言</label>
+<select id="language">
+<option>繁體中文</option>
+<option>台語</option>
+<option>中文＋台語混合</option>
+</select>
+</div>
+
+<div>
+<label>聲線</label>
+<select id="voice">
+<option>女聲・霸氣</option>
+<option>女聲・清亮</option>
+<option>女聲・溫柔</option>
+<option>女聲・低沉</option>
+</select>
+</div>
+
+<div>
+<label>情緒</label>
+<select id="mood">
+<option>氣勢磅礡</option>
+<option>熱血</option>
+<option>神秘</option>
+<option>溫柔</option>
+</select>
+</div>
+
+<div>
+<label>長度</label>
+<select id="duration">
+<option value="30">30 秒</option>
+<option value="60" selected>60 秒</option>
+<option value="120">2 分鐘</option>
+<option value="180">3 分鐘</option>
+</select>
+</div>
+
+<div>
+<label>速度</label>
+<select id="tempo">
+<option>慢板</option>
+<option selected>中板</option>
+<option>快板</option>
+</select>
+</div>
+
+</div>
+
+<label>額外要求</label>
+<textarea id="notes" style="min-height:80px"></textarea>
+
+<button class="primary" onclick="makePrompt()">建立歌曲提示詞</button>
+
+<div id="status" class="status">v0.3 已就緒。</div>
+</div>
+
+<div id="promptBox" class="card hidden">
+<h2>歌曲提示詞</h2>
+<pre id="output"></pre>
+<button class="secondary" onclick="copyPrompt()">複製提示詞</button>
+</div>
+
+<div class="card">
+<h2>3. Cloudflare Worker</h2>
+
+<label>Worker 網址</label>
+<input id="worker" value="https://snowy-silence-5370.gogototo24.workers.dev">
+
+<button class="primary" onclick="testWorker()">測試後端</button>
+
+<div id="workerStatus" class="status">尚未測試。</div>
+</div>
+
+<div class="card">
+<h2>4. 生成歌曲</h2>
+
+<button class="primary" onclick="generateSong()">🎵 生成歌曲</button>
+
+<div id="genStatus" class="status">
+目前沒有 ElevenLabs API Key，所以真正生成歌曲暫時不會成功。
+</div>
+</div>
+
+<div id="playerBox" class="card hidden">
+<h2>歌曲完成</h2>
+<audio id="player" controls></audio>
+</div>
+
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+
+function preset(type){
+ const p={
+  cat:["極武天命","電影級武俠","台語","女聲・霸氣","氣勢磅礡","中板","電影級布袋戲武俠氣勢，戰鼓、弦樂、東方樂器，副歌要有記憶點。"],
+  tw:["月下心聲","台語流行","台語","女聲・溫柔","溫柔","中板","台語咬字自然，旋律順口。"],
+  epic:["天境決","史詩搖滾","繁體中文","女聲・霸氣","熱血","快板","大鼓、弦樂、東方元素，電影級氣勢。"]
+ }[type];
+
+ ["title","style","language","voice","mood","tempo","notes"]
+ .forEach((id,i)=>$(id).value=p[i]);
+}
+
+function data(){
+ return {
+  title:$("title").value||"未命名歌曲",
+  lyrics:$("lyrics").value.trim(),
+  style:$("style").value,
+  language:$("language").value,
+  voice:$("voice").value,
+  mood:$("mood").value,
+  tempo:$("tempo").value,
+  duration_seconds:Number($("duration").value),
+  notes:$("notes").value
+ };
+}
+
+function makePrompt(){
+ const p=data();
+
+ if(!p.lyrics){
+  $("status").textContent="請先輸入歌詞。";
+  $("status").className="status err";
+  return;
+ }
+
+ window.promptText=
+`歌曲：${p.title}
+曲風：${p.style}
+語言：${p.language}
+聲線：${p.voice}
+情緒：${p.mood}
+速度：${p.tempo}
+長度：約 ${p.duration_seconds} 秒
+要求：${p.notes||"無"}
+
+製作方向：
+主歌、副歌層次清楚。
+旋律要有記憶點。
+歌詞咬字清楚。
+前 8–12 秒快速進入主題。
+
+歌詞：
+${p.lyrics}`;
+
+ $("output").textContent=window.promptText;
+ $("promptBox").classList.remove("hidden");
+ $("status").textContent="提示詞已建立。";
+ $("status").className="status ok";
+}
+
+async function copyPrompt(){
+ try{
+  await navigator.clipboard.writeText(window.promptText||"");
+  alert("已複製");
+ }catch{
+  alert("請手動複製");
+ }
+}
+
+function workerUrl(){
+ return $("worker").value.trim().replace(/\/+$/,"");
+}
+
+async function testWorker(){
+ $("workerStatus").textContent="測試中…";
+
+ try{
+  const r=await fetch(workerUrl()+"/health");
+  const j=await r.json();
+
+  if(j.ok){
+   $("workerStatus").textContent="Worker 連線成功。";
+   $("workerStatus").className="status ok";
+  }else{
+   throw Error("狀態異常");
+  }
+ }catch(e){
+  $("workerStatus").textContent="連線失敗："+e.message;
+  $("workerStatus").className="status err";
+ }
+}
+
+async function generateSong(){
+ const p=data();
+
+ if(!p.lyrics){
+  $("genStatus").textContent="請先輸入歌詞。";
+  return;
+ }
+
+ $("genStatus").textContent="正在呼叫 Worker…";
+
+ try{
+  const r=await fetch(workerUrl()+"/generate",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(p)
+  });
+
+  if(!r.ok){
+   let m="HTTP "+r.status;
+   try{
+    const j=await r.json();
+    m=j.error||m;
+   }catch{}
+   throw Error(m);
+  }
+
+  const blob=await r.blob();
+  const url=URL.createObjectURL(blob);
+
+  $("player").src=url;
+  $("playerBox").classList.remove("hidden");
+  $("genStatus").textContent="歌曲生成完成。";
+  $("genStatus").className="status ok";
+
+ }catch(e){
+
+  $("genStatus").textContent=
+  e.message.includes("ELEVENLABS_API_KEY")
+  ?"Worker 正常，但目前尚未設定音樂 API Key。"
+  :"生成失敗："+e.message;
+
+  $("genStatus").className="status err";
+ }
+}
+</script>
+
+</body>
+</html>
