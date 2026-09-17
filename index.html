@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI 音樂生成工作室 v0.3</title>
+<title>AI 音樂生成工作室 v0.4</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b0d12;color:#fff;font-family:system-ui,"Noto Sans TC",sans-serif}
@@ -31,7 +31,7 @@ audio{width:100%}
 <body>
 <main>
 
-<small>AI MUSIC STUDIO · v0.3</small>
+<small>AI MUSIC STUDIO · v0.4</small>
 <h1>AI 音樂生成工作室</h1>
 <p>輸入歌詞、選擇台語／國語與曲風。已連接 Cloudflare Worker 架構。</p>
 
@@ -44,6 +44,22 @@ audio{width:100%}
 
 <div class="card">
 <h2>1. 歌曲與歌詞</h2>
+ <label>角色／歌曲主題</label>
+
+<select id="character">
+<option value="custom">自訂主題</option>
+<option value="mofu">魔佛波旬</option>
+<option value="moonfan">月扇影喵</option>
+<option value="liuli">琉璃喵</option>
+<option value="epic">極武篇・史詩武者</option>
+</select>
+
+<label>自訂主題</label>
+<input id="theme" placeholder="例如：宿命決戰、月下孤城、破界重生">
+
+<button class="primary" onclick="autoLyrics()">
+✨ 自動生成全新歌詞
+</button>
 <label>歌曲主題</label>
 <input id="theme" placeholder="例如：月下琉璃、魔佛波旬、江湖決戰">
 
@@ -432,6 +448,326 @@ ${theme}　穿越風雨而來
  "status ok";
 
  }
+ function pick(arr){
+ return arr[Math.floor(Math.random()*arr.length)];
+}
+
+const roleProfiles = {
+
+ mofu:{
+  name:"魔佛波旬",
+  images:[
+   "紫焰照破寂靜長夜",
+   "黑蓮浮起萬丈魔光",
+   "三界無聲只聞鐘鳴",
+   "佛焰逆照天地邊界"
+  ],
+  powers:[
+   "一念撼動六道",
+   "掌中翻覆乾坤",
+   "蓮火吞沒塵世",
+   "魔光劃破天穹"
+  ],
+  hooks:[
+   "魔佛降世　天地無聲",
+   "波旬一念　萬法皆空",
+   "黑蓮一開　誰敢問天",
+   "佛魔同體　逆轉乾坤"
+  ],
+  mood:"暗黑、威壓、神聖與魔性並存"
+ },
+
+ moonfan:{
+  name:"月扇影喵",
+  images:[
+   "冷月映在黑色扇面",
+   "孤影踏過銀白霜地",
+   "夜風捲起滿城月華",
+   "一扇輕開星河倒映"
+  ],
+  powers:[
+   "扇影斬開月色",
+   "清光封住長夜",
+   "孤月化成萬刃",
+   "一念鎮住風雪"
+  ],
+  hooks:[
+   "月扇一開　萬影皆寂",
+   "影落長夜　唯月不滅",
+   "一扇清光　照破千劫",
+   "月下孤影　不問歸途"
+  ],
+  mood:"冷豔、孤高、月夜、神秘"
+ },
+
+ liuli:{
+  name:"琉璃喵",
+  images:[
+   "琉璃月色落在衣袖",
+   "星光碎在寂靜湖面",
+   "風把舊夢吹向天涯",
+   "銀河映著孤城微光"
+  ],
+  powers:[
+   "心念化作星光",
+   "月華守住初心",
+   "夢境穿越長夜",
+   "微光點亮天涯"
+  ],
+  hooks:[
+   "琉璃不碎　此心不滅",
+   "月光仍在　夢就還在",
+   "一念琉璃　照亮長夜",
+   "就算天黑　仍有星光"
+  ],
+  mood:"夢幻、抒情、空靈、堅定"
+ },
+
+ epic:{
+  name:"極武天命",
+  images:[
+   "戰鼓震動千里山河",
+   "長風掠過孤高戰場",
+   "天際燃起金色神光",
+   "萬峰之上劍氣縱橫"
+  ],
+  powers:[
+   "一擊撼動天門",
+   "戰意衝破雲海",
+   "真氣震碎封印",
+   "極招逆轉乾坤"
+  ],
+  hooks:[
+   "極武一戰　誰與爭鋒",
+   "天命若鎖　便破天命",
+   "此戰未終　吾心不退",
+   "一念極武　天地皆震"
+  ],
+  mood:"熱血、史詩、武戲、電影級"
+ }
+
+};
+
+const common = {
+
+ verseOpen:[
+  "風從遠方帶來未完的夢",
+  "夜色沉下　天地只剩心跳",
+  "舊日的名字仍留在風中",
+  "長路無聲　腳步卻從未停止"
+ ],
+
+ verse2:[
+  "走過多少無人知曉的歲月",
+  "留下多少不能回頭的痕跡",
+  "天地再大也困不住一念",
+  "前路再暗也遮不住微光"
+ ],
+
+ pre:[
+  "若命運要我低頭",
+  "若天地早寫好結局",
+  "若前方只剩最後一條路",
+  "若此身註定穿越風暴"
+ ],
+
+ answer:[
+  "我便用此心寫下答案",
+  "那就親手改寫最後一頁",
+  "我仍會向前一步",
+  "便讓今夜成為新的開始"
+ ],
+
+ bridge:[
+  "也許世界從未給過答案",
+  "真正的勝負從來不在刀劍",
+  "當最後一道光穿過長夜",
+  "到了無路可退的那一刻"
+ ],
+
+ ending:[
+  "名字終將留在風中",
+  "月光仍會照著來時的路",
+  "故事還沒有真正結束",
+  "天亮以前　此心不滅"
+ ]
+
+};
+
+
+function autoLyrics(){
+
+ const roleKey =
+ $("character").value;
+
+ const language =
+ $("language").value;
+
+ const customTheme =
+ $("theme").value.trim();
+
+ let profile;
+
+ if(roleKey === "custom"){
+
+  const name =
+   customTheme || "無名江湖";
+
+  profile = {
+   name:name,
+   images:[
+    `${name} 映在深夜月光`,
+    `風穿過 ${name} 的長路`,
+    `${name} 在星空下甦醒`,
+    `遠方傳來 ${name} 的回聲`
+   ],
+   powers:[
+    "一念跨越長夜",
+    "心火照亮前路",
+    "信念撼動命運",
+    "微光穿破黑暗"
+   ],
+   hooks:[
+    `${name}　此心不滅`,
+    `${name}　逆風而行`,
+    `${name}　照破長夜`,
+    `${name}　寫下新章`
+   ],
+   mood:"依主題自由發展"
+  };
+
+ }else{
+
+  profile =
+   roleProfiles[roleKey];
+
+ }
+
+ const titleOptions = [
+  profile.name,
+  `${profile.name}・破界`,
+  `${profile.name}・天命`,
+  `${profile.name}・月下`,
+  `${profile.name}・無盡`
+ ];
+
+ $("title").value =
+  pick(titleOptions);
+
+ const hook =
+  pick(profile.hooks);
+
+ let lyrics;
+
+ if(language === "台語"){
+
+ lyrics =
+`【主歌一】
+${pick(profile.images)}
+暗暝的風猶原咧吹
+${pick(common.verseOpen)}
+阮一步一步行過去
+
+【預副歌】
+${pick(common.pre)}
+${pick(common.answer)}
+
+【副歌】
+${hook}
+${pick(profile.powers)}
+風雨若欲擋阮的路
+阮就用一念行到底
+
+${hook}
+天地若問阮驚不驚
+就算孤單行過千山
+阮嘛袂放棄家己
+
+【主歌二】
+${pick(common.verse2)}
+往事親像月光落地
+${pick(profile.images)}
+心內的火猶原未熄
+
+【橋段】
+${pick(common.bridge)}
+阮才知影真正的力量
+毋是勝過別人
+是袂放棄心內彼道光
+
+【最終副歌】
+${pick(profile.hooks)}
+${pick(profile.powers)}
+命運若欲寫阮的結局
+阮就親手重新寫過
+
+【尾聲】
+${pick(common.ending)}`;
+
+ }else{
+
+ lyrics =
+`【主歌一】
+${pick(profile.images)}
+長夜的風仍未停息
+${pick(common.verseOpen)}
+我一步一步走向前方
+
+【預副歌】
+${pick(common.pre)}
+${pick(common.answer)}
+
+【副歌】
+${hook}
+${pick(profile.powers)}
+若風雨擋住我的路
+我就用一念走到底
+
+${hook}
+若天地問我是否畏懼
+縱使孤身越過千山
+也不讓此心熄滅
+
+【主歌二】
+${pick(common.verse2)}
+往事如月光落在腳下
+${pick(profile.images)}
+胸中的火依然未熄
+
+【橋段】
+${pick(common.bridge)}
+才明白真正的力量
+並不是擊敗誰
+而是不曾背離初心
+
+【最終副歌】
+${pick(profile.hooks)}
+${pick(profile.powers)}
+若命運已寫好結局
+那就由我重新寫過
+
+【尾聲】
+${pick(common.ending)}`;
+
+ }
+
+ $("lyrics").value =
+  lyrics;
+
+ $("notes").value =
+ `${profile.mood}。
+每段情緒逐步提升。
+副歌需要強烈記憶點。
+避免過長前奏。
+適合角色登場、武戲或短影音高潮。`;
+
+ $("status").textContent =
+ "✨ 已重新生成一首不同版本的角色歌曲。再按一次會換新的歌詞組合。";
+
+ $("status").className =
+ "status ok";
+
+}
 </script>
 
 </body>
