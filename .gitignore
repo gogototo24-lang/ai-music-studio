@@ -1,0 +1,15 @@
+# .gitignore
+
+.DS_Store
+node_modules/
+.env
+.env.*
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.vscode/
+coverage/
+.dist/
+.cache/
+local-ai/.venv/

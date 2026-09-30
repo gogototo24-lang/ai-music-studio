@@ -1,0 +1,29 @@
+{
+  "presetId": "miao-taiwan",
+  "name": "《喵台灣宇宙》模式",
+  "description": "台灣本土文化、城市、夜景、紀錄片氛圍的故事世界觀。",
+  "aspectRatio": "9:16",
+  "defaultMode": "story",
+  "characterConsistency": true,
+  "visualStyle": {
+    "tone": "urban cinematic",
+    "lighting": "street neon and dusk glow",
+    "camera": "ground-level movement, close-ups, city pans",
+    "color": "warm night light, urban blue, ambient teal"
+  },
+  "promptPrefix": "Taiwan cat universe, city night, cinematic, atmospheric, realistic details, vibrant local culture",
+  "negativePrompt": "low detail, weird face, distorted body, blurry background, inconsistent wardrobe",
+  "voiceProfile": {
+    "gender": "female",
+    "language": "zh-tw",
+    "tone": "warm",
+    "pitch": 1.0,
+    "clarity": 0.85
+  },
+  "workflow": {
+    "storyboard": true,
+    "imageGeneration": true,
+    "videoGeneration": true,
+    "ffmpegExport": true
+  }
+}

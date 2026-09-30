@@ -1,0 +1,29 @@
+{
+  "presetId": "general-mv",
+  "name": "一般 MV 模式",
+  "description": "通用風格，可作為預設 AI MV 配置。",
+  "aspectRatio": "9:16",
+  "defaultMode": "auto",
+  "characterConsistency": false,
+  "visualStyle": {
+    "tone": "cinematic",
+    "lighting": "soft dramatic",
+    "camera": "medium tracking shots",
+    "color": "balanced neon cinematic"
+  },
+  "promptPrefix": "cinematic music video, atmospheric, detailed, high quality",
+  "negativePrompt": "blurry, low quality, distorted face, bad anatomy, watermark",
+  "voiceProfile": {
+    "gender": "female",
+    "language": "zh-tw",
+    "tone": "clear",
+    "pitch": 1.0,
+    "clarity": 0.8
+  },
+  "workflow": {
+    "storyboard": true,
+    "imageGeneration": true,
+    "videoGeneration": true,
+    "ffmpegExport": true
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "projectId": "demo_project_001",
+  "title": "月下琉璃",
+  "lyrics": "【主歌一】\n月色落下，風輕輕吹起舊夢\n我站在城門，等待那一點光\n\n【副歌】\n若風雨擋住我的路\n我就一念走到底\n天地若問我驚不驚\n我也要把夢照亮",
+  "style": "電影級武俠",
+  "language": "zh-tw",
+  "voice": {
+    "gender": "female",
+    "tone": "clear",
+    "language": "zh-tw",
+    "pitch": 1.1,
+    "clarity": 0.82
+  },
+  "music": {
+    "bpm": 112,
+    "key": "D",
+    "instrumentMix": {
+      "drums": 0.25,
+      "bass": 0.2,
+      "piano": 0.2,
+      "strings": 0.2,
+      "synth": 0.15
+    },
+    "songSections": ["intro", "verse", "chorus", "bridge", "outro"],
+    "regenerateSection": "chorus"
+  },
+  "storyboard": {
+    "enabled": true,
+    "mode": "auto",
+    "shots": [
+      { "id": "shot_1", "duration": 10, "scene": "夜景", "visualPrompt": "moonlit city gate, cinematic wide angle" },
+      { "id": "shot_2", "duration": 10, "scene": "人物近景", "visualPrompt": "close-up of heroine in moonlight" },
+      { "id": "shot_3", "duration": 10, "scene": "城市大景", "visualPrompt": "high angle city skyline with heroine silhouette" }
+    ]
+  },
+  "video": {
+    "aspectRatio": "9:16",
+    "provider": "local-comfyui",
+    "characterConsistency": true,
+    "preset": "maozhang-jianghu"
+  },
+  "timeline": {
+    "tracks": [
+      { "type": "music", "label": "伴奏軌" },
+      { "type": "voice", "label": "人聲軌" },
+      { "type": "subtitle", "label": "字幕軌" },
+      { "type": "video", "label": "影片軌" }
+    ]
+  }
+}

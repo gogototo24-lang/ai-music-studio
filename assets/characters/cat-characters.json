@@ -1,0 +1,30 @@
+{
+  "characters": [
+    {
+      "id": "moonfan",
+      "name": "月扇影喵",
+      "role": "主角",
+      "species": "cat",
+      "gender": "female",
+      "style": "電影級武俠",
+      "color": ["silver", "moonlit blue", "black"],
+      "fixedFace": true,
+      "fixedCostume": true,
+      "weapons": ["moon fan", "blade"],
+      "preset": "maozhang-jianghu"
+    },
+    {
+      "id": "liuli",
+      "name": "琉璃喵",
+      "role": "反派/曖昧角色",
+      "species": "cat",
+      "gender": "female",
+      "style": "抒情古風",
+      "color": ["jade", "teal", "gold"],
+      "fixedFace": true,
+      "fixedCostume": true,
+      "weapons": ["spear"],
+      "preset": "maozhang-jianghu"
+    }
+  ]
+}

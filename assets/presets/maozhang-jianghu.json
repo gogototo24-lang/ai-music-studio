@@ -1,0 +1,53 @@
+{
+  "presetId": "maozhang-jianghu",
+  "name": "《貓掌江湖》模式",
+  "description": "電影級布袋戲風格，角色一致性優先，所有角色須維持固定外觀與武器設定。",
+  "aspectRatio": "9:16",
+  "defaultMode": "canon",
+  "characterConsistency": true,
+  "visualStyle": {
+    "tone": "wuxia cinematic",
+    "lighting": "moonlit dramatic highlights",
+    "camera": "dynamic tracking, wide shots, close-ups",
+    "color": "ink black, gold, red, moonlight silver"
+  },
+  "promptPrefix": "cat wuxia puppet theater cinematic style, dramatic moonlight, high detail, stylized characters, epic martial arts, 9:16 vertical composition",
+  "negativePrompt": "random weapon shape changes, inconsistent face, costume mismatch, modern objects, low detail, bad anatomy",
+  "voiceProfile": {
+    "gender": "female",
+    "language": "zh-tw",
+    "tone": "heroic",
+    "pitch": 1.08,
+    "clarity": 0.9
+  },
+  "canon": {
+    "allCharactersAreCats": true,
+    "faceShapeFixed": true,
+    "costumeFixed": true,
+    "weaponRules": [
+      "fixed model per character",
+      "no random weapon mutation",
+      "sword, spear, fan, and blade must remain consistent"
+    ],
+    "worldview": "cat martial world, mythic town streets, moonlit rooftop battles",
+    "colorPalette": [
+      "midnight black",
+      "silver moonlight",
+      "jade green",
+      "deep red"
+    ],
+    "traits": [
+      "female cat heroine",
+      "puppet theater framing",
+      "high contrast silhouette",
+      "dramatic action choreography"
+    ]
+  },
+  "workflow": {
+    "storyboard": true,
+    "imageGeneration": true,
+    "videoGeneration": true,
+    "ffmpegExport": true
+  },
+  "referenceImage": "assets/characters/maozhang-jianghu-reference.png"
+}
