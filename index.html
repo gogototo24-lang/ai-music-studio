@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0d12">
-<title>AI 音樂生成工作室 v1.0</title>
+<title>AI 音樂生成工作室 v1.0 MV</title>
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -43,9 +43,9 @@ audio{width:100%}
 <main>
 <div class="top">
   <div>
-    <span class="badge">AI MUSIC STUDIO · v1.0</span>
+    <span class="badge">AI MUSIC STUDIO · v1.0 MV</span>
     <h1>AI 音樂生成工作室</h1>
-    <p>角色歌曲、隨機歌名、不同歌詞版本、武戲／抒情／登場／決戰模式、台語／國語／混合、提示詞、專案儲存、Cloudflare Worker 測試與歌曲播放，一次整合。</p>
+    <p>角色歌曲、隨機歌名、不同歌詞版本、武戲／抒情／登場／決戰模式、台語／國語／混合、提示詞、專案儲存、Cloudflare Worker 測試與歌曲播放。升級版支援 AI 分鏡、圖片生成、影片製作。</p>
   </div>
   <span id="workerBadge" class="pill">Worker 未測試</span>
 </div>
@@ -88,7 +88,7 @@ audio{width:100%}
     </select>
   </div>
 </div>
-<button class="primary" onclick="autoLyrics()">✨ 生成全新歌詞＋隨機歌名</button>
+<button class="primary" id="autoLyricsBtn">✨ 生成全新歌詞＋隨機歌名</button>
 <div id="lyricStatus" class="status">同一角色每按一次都會重新組合歌名、主歌、副歌與橋段。</div>
 </section>
 
@@ -103,137 +103,364 @@ audio{width:100%}
 <section class="card">
 <h2>3. 音樂設定</h2>
 <div class="grid3">
-  <div><label>曲風</label><select id="style"><option>電影級武俠</option><option>台語流行</option><option>史詩搖滾</option><option>電子國風</option><option>抒情古風</option><option>暗黑交響</option><option>電影配樂</option></select></div>
-  <div><label>語言</label><select id="language"><option>繁體中文</option><option>台語</option><option>中文＋台語混合</option></select></div>
-  <div><label>聲線</label><select id="voice"><option>女聲・霸氣</option><option>女聲・清亮</option><option>女聲・溫柔</option><option>女聲・低沉</option><option>女聲・戲曲感</option></select></div>
-  <div><label>情緒</label><select id="mood"><option>氣勢磅礡</option><option>熱血</option><option>神秘</option><option>悲壯</option><option>溫柔</option><option>空靈</option></select></div>
-  <div><label>歌曲長度</label><select id="duration"><option value="30">30 秒</option><option value="60" selected>60 秒</option><option value="120">2 分鐘</option><option value="180">3 分鐘</option></select></div>
-  <div><label>速度</label><select id="tempo"><option>慢板</option><option selected>中板</option><option>快板</option><option>自由速度</option></select></div>
+  <div>
+    <label>曲風</label>
+    <select id="style">
+      <option>電影級武俠</option>
+      <option>台語流行</option>
+      <option>史詩搖滾</option>
+      <option>電子國風</option>
+      <option>抒情古風</option>
+      <option>暗黑交響</option>
+      <option>電影配樂</option>
+    </select>
+  </div>
+  <div>
+    <label>語言</label>
+    <select id="language">
+      <option>繁體中文</option>
+      <option>台語</option>
+      <option>中文＋台語混合</option>
+    </select>
+  </div>
+  <div>
+    <label>聲線</label>
+    <select id="voice">
+      <option>女聲・霸氣</option>
+      <option>女聲・清亮</option>
+      <option>女聲・溫柔</option>
+      <option>女聲・低沉</option>
+      <option>女聲・戲劇</option>
+    </select>
+  </div>
+  <div>
+    <label>情緒</label>
+    <select id="mood">
+      <option>氣勢磅礡</option>
+      <option>熱血</option>
+      <option>神秘</option>
+      <option>悲壯</option>
+      <option>溫柔</option>
+      <option>空靈</option>
+    </select>
+  </div>
+  <div>
+    <label>歌曲長度</label>
+    <select id="duration">
+      <option value="30">30 秒</option>
+      <option value="60" selected>60 秒</option>
+      <option value="120">2 分鐘</option>
+      <option value="180">3 分鐘</option>
+    </select>
+  </div>
+  <div>
+    <label>速度</label>
+    <select id="tempo">
+      <option>慢板</option>
+      <option selected>中板</option>
+      <option>快板</option>
+      <option>自由速度</option>
+    </select>
+  </div>
 </div>
 <label>額外要求</label>
 <textarea id="notes" class="small" placeholder="例如：戰鼓更重、副歌更洗腦、前奏 5 秒內進人聲"></textarea>
-<button class="primary" onclick="makePrompt()">建立歌曲製作提示詞</button>
-<div class="row"><button class="secondary" onclick="saveProject()">💾 儲存設定</button><button class="ghost" onclick="clearSong()">清空</button></div>
+<button class="primary" id="makePromptBtn">建立歌曲製作提示詞</button>
+<div class="row">
+  <button class="secondary" id="saveProjectBtn">💾 儲存設定</button>
+  <button class="ghost" id="clearSongBtn">清空</button>
+  <button class="ghost" id="exportJsonBtn">📥 匯出 JSON</button>
+  <button class="ghost" id="importJsonBtn">📤 匯入 JSON</button>
+</div>
 </section>
 
 <section id="promptBox" class="card hidden">
 <h2>4. 歌曲提示詞</h2>
 <pre id="output"></pre>
-<div class="row"><button class="secondary" onclick="copyPrompt()">複製提示詞</button></div>
+<div class="row">
+  <button class="secondary" id="copyPromptBtn">複製提示詞</button>
+  <button class="ghost" id="downloadPromptBtn">下載提示詞</button>
+</div>
 </section>
 
 <section class="card">
-<h2>5. Cloudflare Worker</h2>
+<h2>5. Preset / 模式選擇</h2>
+<div class="grid">
+  <div>
+    <label>MV 模式</label>
+    <select id="presetSelect">
+      <option value="general-mv">一般 MV 模式</option>
+      <option value="maozhang-jianghu">《貓掌江湖》模式</option>
+      <option value="miao-taiwan">《喵台灣宇宙》模式</option>
+    </select>
+  </div>
+  <div style="display: flex; align-items: flex-end;">
+    <button class="secondary" id="applyPresetBtn" style="width: 100%; margin-top: 12px;">套用模式</button>
+  </div>
+</div>
+</section>
+
+<section class="card">
+<h2>6. Cloudflare Worker</h2>
 <label>Worker 網址</label>
 <input id="worker" value="https://snowy-silence-5370.gogototo24.workers.dev">
-<button class="primary" onclick="testWorker()">測試後端</button>
+<button class="primary" id="testWorkerBtn">測試後端</button>
 <div id="workerStatus" class="status">尚未測試 Worker。</div>
 </section>
 
 <section class="card">
-<h2>6. 生成歌曲</h2>
-<button class="primary" onclick="generateSong()">🎵 生成歌曲</button>
+<h2>7. 生成歌曲</h2>
+<button class="primary" id="generateSongBtn">🎵 生成歌曲</button>
 <div id="genStatus" class="status">目前若沒有音樂 API Key，這一步會顯示尚未設定；前面的免費歌詞與提示詞功能仍可使用。</div>
 </section>
 
 <section id="playerBox" class="card hidden">
 <h2>歌曲完成</h2>
 <audio id="player" controls></audio>
-<div class="row"><a id="downloadLink" download="ai-music.mp3"><button class="secondary">⬇ 下載 MP3</button></a></div>
+<div class="row">
+  <a id="downloadLink" download="ai-music.mp3"><button class="secondary">⬇ 下載 MP3</button></a>
+</div>
 </section>
 
 <section class="card">
-<h2>7. 最近儲存</h2>
+<h2>8. 最近儲存</h2>
 <div id="history" class="muted">目前沒有儲存的歌曲。</div>
 </section>
 </main>
 
-<script>
-const $=id=>document.getElementById(id);
-const pick=a=>a[Math.floor(Math.random()*a.length)];
+<script type="module">
+import { UI } from './src/modules/ui/ui-core.js';
+import { projectManager } from './src/core/project-manager.js';
+import { uiBridge } from './src/core/ui-bridge.js';
+import { historyRenderer } from './src/core/history-renderer.js';
+import { projectExport } from './src/core/project-export.js';
+import { LyricsEditor } from './src/modules/lyrics/lyrics-editor.js';
+import { presetLoader } from './src/modules/preset/preset-loader.js';
 
-const profiles={
-mofu:{name:"魔佛波旬",style:"暗黑交響",voice:"女聲・低沉",mood:"神秘",images:["紫焰照破寂靜長夜","黑蓮浮起萬丈魔光","三界無聲只聞鐘鳴","佛焰逆照天地邊界"],powers:["一念撼動六道","掌中翻覆乾坤","蓮火吞沒塵世","魔光劃破天穹"],hooks:["魔佛降世　天地無聲","波旬一念　萬法皆空","黑蓮一開　誰敢問天","佛魔同體　逆轉乾坤"]},
-moonfan:{name:"月扇影喵",style:"電影級武俠",voice:"女聲・清亮",mood:"神秘",images:["冷月映在黑色扇面","孤影踏過銀白霜地","夜風捲起滿城月華","一扇輕開星河倒映"],powers:["扇影斬開月色","清光封住長夜","孤月化成萬刃","一念鎮住風雪"],hooks:["月扇一開　萬影皆寂","影落長夜　唯月不滅","一扇清光　照破千劫","月下孤影　不問歸途"]},
-liuli:{name:"琉璃喵",style:"抒情古風",voice:"女聲・清亮",mood:"空靈",images:["琉璃月色落在衣袖","星光碎在寂靜湖面","風把舊夢吹向天涯","銀河映著孤城微光"],powers:["心念化作星光","月華守住初心","夢境穿越長夜","微光點亮天涯"],hooks:["琉璃不碎　此心不滅","月光仍在　夢就還在","一念琉璃　照亮長夜","就算天黑　仍有星光"]},
-bai:{name:"白狂天喵",style:"史詩搖滾",voice:"女聲・霸氣",mood:"熱血",images:["白影踏過風雪長原","寒光映著孤高身影","長刀未鳴風已止息","雪夜之上戰意如火"],powers:["刀光劈開長空","一斬震碎封印","狂意撼動山河","寒鋒逆破天命"],hooks:["白狂一刀　天地退讓","狂意不滅　誰敢擋關","刀出如雪　戰意如雷","孤身一戰　不問歸還"]},
-fire:{name:"焚天赤焰喵",style:"史詩搖滾",voice:"女聲・霸氣",mood:"氣勢磅礡",images:["赤焰燃過天際盡頭","火光照亮破碎戰場","焚風捲起漫天星火","赤紅身影踏火而來"],powers:["火龍破十方","烈焰吞天裂地","焚火震碎夜幕","赤炎翻湧九霄"],hooks:["焚天一怒　萬火同燃","赤焰不滅　戰到天明","火龍破界　十方皆震","一身烈火　照破長夜"]},
-suili:{name:"歲璃喵",style:"電影配樂",voice:"女聲・溫柔",mood:"神秘",images:["時間停在雨幕之中","金色波紋穿過長夜","古老刀鞘輕敲地面","歲月在她身後凝結"],powers:["一念停住光陰","時間波紋逆轉戰局","歲月之力封住萬劍","一瞬改寫前後因果"],hooks:["三息之間　天地靜止","歲璃一念　時光回首","光陰若鎖　便逆流而行","一敲刀鞘　萬象重排"]},
-blood:{name:"血紋劍喵",style:"暗黑交響",voice:"女聲・低沉",mood:"悲壯",images:["血紋在劍身微微發亮","雨夜映出冰冷劍鋒","黑暗之中殺意無聲","萬劍懸在沉默長空"],powers:["劍氣分裂成千影","血紋引動萬劍","寒芒封鎖退路","一劍逼近生死邊界"],hooks:["血紋一現　萬劍同鳴","劍鋒未落　天地先寒","一念成劍　萬影歸一","雨夜無聲　唯劍有名"]}
-};
+console.log('AI MV Studio v1 initialized');
 
-const modeWords={
-intro:{title:["登場","初臨","降世","現影"],line:["今夜由她寫下第一聲","一步踏入萬眾目光","名字從此留在風中"]},
-battle:{title:["破陣","武極","戰境","裂天"],line:["戰鼓一響便不再回頭","招式交錯撕開夜幕","此戰只問誰能站到最後"]},
-ballad:{title:["月下","心聲","流光","未央"],line:["有些名字只適合留在月光裡","風帶走故事卻帶不走思念","最深的話藏在最安靜的夜"]},
-final:{title:["天命","終戰","末劫","無盡"],line:["若此戰就是最後一頁","天地都在等最後答案","今日之後再無退路"]}
-};
+uiBridge.syncFromProject(projectManager.currentProject);
+historyRenderer.render('history');
 
-const common={
-open:["風從遠方帶來未完的夢","夜色沉下　天地只剩心跳","舊日的名字仍留在風中","長路無聲　腳步卻從未停止"],
-pre:["若命運要我低頭","若天地早寫好結局","若前方只剩最後一條路","若此身註定穿越風暴"],
-answer:["我便用此心寫下答案","那就親手改寫最後一頁","我仍會向前一步","便讓今夜成為新的開始"],
-bridge:["也許世界從未給過答案","真正的勝負從來不在刀劍","當最後一道光穿過長夜","到了無路可退的那一刻"],
-ending:["名字終將留在風中","月光仍會照著來時的路","故事還沒有真正結束","天亮以前　此心不滅"]
-};
-
-function profile(){
- const k=$("character").value;
- if(k!=="custom") return profiles[k];
- const n=$("theme").value.trim()||"無名江湖";
- return {name:n,style:"電影級武俠",voice:"女聲・霸氣",mood:"氣勢磅礡",images:[`${n}映在深夜月光`,`風穿過${n}的長路`,`${n}在星空下甦醒`,`遠方傳來${n}的回聲`],powers:["一念跨越長夜","心火照亮前路","信念撼動命運","微光穿破黑暗"],hooks:[`${n}　此心不滅`,`${n}　逆風而行`,`${n}　照破長夜`,`${n}　寫下新章`]};
+function updateProjectFromUI() {
+  const project = projectManager.currentProject;
+  project.title = UI.getValue('title');
+  project.lyrics = UI.getValue('lyrics');
+  project.style = UI.getValue('style');
+  project.language = UI.getValue('language');
+  project.mood = UI.getValue('mood');
+  project.notes = UI.getValue('notes');
+  project.character = UI.getValue('character');
+  project.theme = UI.getValue('theme');
+  project.mode = UI.getValue('mode');
+  project.music = project.music || {};
+  project.music.duration = UI.getValue('duration');
+  project.music.tempo = UI.getValue('tempo');
+  project.voice = project.voice || {};
+  project.voice.gender = 'female';
+  project.voice.tone = UI.getValue('voice');
+  project.voice.language = project.language;
+  projectManager.saveCurrentProject(project);
 }
 
-function autoLyrics(){
- const p=profile(),m=modeWords[$("mode").value],lang=$("language").value,hookMode=$("hook").value;
- const hook=pick(p.hooks);
- const extra=hookMode==="max"?pick(p.hooks)+"\n"+pick(p.powers):hookMode==="strong"?hook+"\n"+pick(p.powers):hook;
- $("title").value=`${p.name}・${pick(m.title)}`;
- $("style").value=p.style;$("voice").value=p.voice;$("mood").value=p.mood;
- const mixed=lang==="中文＋台語混合",tw=lang==="台語";
- const verse1=`${pick(p.images)}\n${pick(common.open)}\n${pick(m.line)}\n${pick(p.powers)}`;
- let chorus=tw?`${extra}\n風雨若欲擋阮的路\n阮就一念行到底\n天地若問阮驚不驚\n阮嘛袂放棄家己`:`${extra}\n若風雨擋住我的路\n我就一念走到底\n若天地問我是否畏懼\n我也不讓此心熄滅`;
- let bridge=tw?`${pick(common.bridge)}\n阮才知影真正的力量\n毋是勝過別人\n是袂放棄心內彼道光`:`${pick(common.bridge)}\n才明白真正的力量\n並不是擊敗誰\n而是不曾背離初心`;
- if(mixed) chorus=`${extra}\n風雨若欲擋阮的路\n我就一念行到底\n天地若問阮驚不驚\n我嘛袂放棄家己`;
- $("lyrics").value=`【主歌一】\n${verse1}\n\n【預副歌】\n${pick(common.pre)}\n${pick(common.answer)}\n\n【副歌】\n${chorus}\n\n【主歌二】\n${pick(p.images)}\n${pick(common.open)}\n${pick(p.powers)}\n${pick(m.line)}\n\n【橋段】\n${bridge}\n\n【最終副歌】\n${chorus}\n\n【尾聲】\n${pick(common.ending)}`;
- $("notes").value=`${$("mode").options[$("mode").selectedIndex].text}；副歌強度：${$("hook").options[$("hook").selectedIndex].text}。前 8–12 秒快速進入主題，副歌要有強烈記憶點，適合短影音與角色登場。`;
- $("lyricStatus").textContent="✨ 已生成新版本；再按一次會換歌名、畫面句、副歌與橋段。";
- $("lyricStatus").className="status ok";
-}
+document.getElementById('autoLyricsBtn').addEventListener('click', () => {
+  const characterId = UI.getValue('character');
+  const customTheme = UI.getValue('theme');
+  const mode = UI.getValue('mode');
+  const language = UI.getValue('language');
+  const hookMode = UI.getValue('hook');
 
-function songData(){return {title:$("title").value.trim()||"未命名歌曲",lyrics:$("lyrics").value.trim(),style:$("style").value,language:$("language").value,voice:$("voice").value,mood:$("mood").value,tempo:$("tempo").value,duration_seconds:Number($("duration").value),notes:$("notes").value.trim(),character:$("character").value,theme:$("theme").value,mode:$("mode").value,hook:$("hook").value}}
+  const generated = LyricsEditor.generateLyrics(characterId, customTheme, mode, language, hookMode);
+  UI.setValue('title', generated.title);
+  UI.setValue('lyrics', generated.lyrics);
+  UI.setValue('style', generated.style);
+  UI.setValue('voice', generated.voice);
+  UI.setValue('mood', generated.mood);
 
-function makePrompt(){
- const p=songData();if(!p.lyrics){alert("請先生成或輸入歌詞");return}
- window.promptText=`【歌曲名稱】${p.title}\n【曲風】${p.style}\n【語言】${p.language}\n【聲線】${p.voice}\n【情緒】${p.mood}\n【速度】${p.tempo}\n【長度】約 ${p.duration_seconds} 秒\n【額外要求】${p.notes||"無"}\n\n【製作方向】\n主歌、副歌層次清楚；副歌要有記憶點；人聲咬字清楚；前 8–12 秒快速建立歌曲特色。\n\n【歌詞】\n${p.lyrics}`;
- $("output").textContent=window.promptText;$("promptBox").classList.remove("hidden");
-}
+  updateProjectFromUI();
+  UI.setStatus('lyricStatus', '✨ 已生成新版本；再按一次會換歌名、畫面句、副歌與橋段。', true);
+});
 
-async function copyPrompt(){if(!window.promptText)makePrompt();try{await navigator.clipboard.writeText(window.promptText||"");alert("已複製")}catch{alert("請手動複製")}}
-function workerUrl(){return $("worker").value.trim().replace(/\/+$/,"")}
-async function testWorker(){
- $("workerStatus").textContent="測試中…";
- try{const r=await fetch(workerUrl()+"/health");const j=await r.json();if(!j.ok)throw Error("狀態異常");$("workerStatus").textContent="Worker 連線成功。";$("workerStatus").className="status ok";$("workerBadge").textContent="Worker 已連線";$("workerBadge").className="pill ok"}
- catch(e){$("workerStatus").textContent="連線失敗："+e.message;$("workerStatus").className="status err"}
-}
-async function generateSong(){
- const p=songData();if(!p.lyrics){$("genStatus").textContent="請先生成或輸入歌詞。";return}
- $("genStatus").textContent="正在呼叫 Worker…";
- try{
-  const r=await fetch(workerUrl()+"/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
-  if(!r.ok){let m="HTTP "+r.status;try{const j=await r.json();m=j.error||m}catch{}throw Error(m)}
-  const blob=await r.blob();if(!blob.size)throw Error("收到空白音訊");
-  if(window.currentAudioUrl)URL.revokeObjectURL(window.currentAudioUrl);
-  window.currentAudioUrl=URL.createObjectURL(blob);$("player").src=window.currentAudioUrl;$("downloadLink").href=window.currentAudioUrl;$("downloadLink").download=(p.title||"ai-music").replace(/[\\/:*?"<>|]+/g,"-")+".mp3";
-  $("playerBox").classList.remove("hidden");$("genStatus").textContent="歌曲生成完成。";$("genStatus").className="status ok";
- }catch(e){$("genStatus").textContent=String(e.message).includes("ELEVENLABS_API_KEY")?"Worker 正常，但目前尚未設定音樂 API Key。":"生成失敗："+e.message;$("genStatus").className="status err"}
-}
-function saveProject(){const p=songData();let h=[];try{h=JSON.parse(localStorage.getItem("musicProjects")||"[]")}catch{}h.unshift(p);h=h.slice(0,8);localStorage.setItem("musicProjects",JSON.stringify(h));renderHistory();alert("已儲存")}
-function renderHistory(){let h=[];try{h=JSON.parse(localStorage.getItem("musicProjects")||"[]")}catch{}if(!h.length){$("history").innerHTML="目前沒有儲存的歌曲。";return}$("history").innerHTML=h.map((x,i)=>`<div class="history-item"><strong>${esc(x.title)}</strong><div class="muted">${esc(x.style)} · ${esc(x.language)} · ${x.duration_seconds||60} 秒</div><div class="row"><button class="secondary" onclick="loadProject(${i})">載入</button></div></div>`).join("")}
-function loadProject(i){const h=JSON.parse(localStorage.getItem("musicProjects")||"[]"),p=h[i];if(!p)return;["title","lyrics","style","language","voice","mood","tempo","notes","character","theme","mode","hook"].forEach(k=>{if(p[k]!=null&&$(k))$(k).value=p[k]});$("duration").value=String(p.duration_seconds||60);window.scrollTo({top:0,behavior:"smooth"})}
-function clearSong(){$("title").value="";$("lyrics").value="";$("notes").value="";$("promptBox").classList.add("hidden")}
-function esc(v){return String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-renderHistory();
+document.getElementById('makePromptBtn').addEventListener('click', () => {
+  const lyrics = UI.getValue('lyrics');
+  if (!lyrics) {
+    UI.alert('請先生成或輸入歌詞');
+    return;
+  }
+
+  updateProjectFromUI();
+  const prompt = projectExport.generateMusicPrompt();
+  UI.setText('output', prompt);
+  window.currentPrompt = prompt;
+  UI.show(UI.get('promptBox'));
+});
+
+document.getElementById('copyPromptBtn').addEventListener('click', async () => {
+  if (!window.currentPrompt) {
+    document.getElementById('makePromptBtn').click();
+  }
+  try {
+    await navigator.clipboard.writeText(window.currentPrompt || '');
+    UI.alert('已複製到剪貼板');
+  } catch (error) {
+    UI.alert('複製失敗，請手動複製');
+  }
+});
+
+document.getElementById('downloadPromptBtn').addEventListener('click', () => {
+  const text = window.currentPrompt || UI.getValue('lyrics');
+  if (!text) {
+    UI.alert('目前沒有可下載的提示詞');
+    return;
+  }
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'music-prompt.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('saveProjectBtn').addEventListener('click', () => {
+  updateProjectFromUI();
+  const status = projectManager.saveToHistory();
+  if (status) {
+    historyRenderer.render('history');
+    UI.setStatus('lyricStatus', '✅ 已儲存到歷史列表', true);
+  } else {
+    UI.setStatus('lyricStatus', '⚠️ 無法儲存不完整的專案', false);
+  }
+});
+
+document.getElementById('clearSongBtn').addEventListener('click', () => {
+  if (!confirm('確定要清空所有資料嗎？')) return;
+  UI.setValue('title', '');
+  UI.setValue('lyrics', '');
+  UI.setValue('notes', '');
+  UI.setValue('theme', '');
+  UI.hide(UI.get('promptBox'));
+  projectManager.clearCurrent();
+  UI.setStatus('lyricStatus', '已清空', false);
+});
+
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  updateProjectFromUI();
+  projectExport.downloadJSON();
+});
+
+document.getElementById('importJsonBtn').addEventListener('click', () => {
+  const json = prompt('貼入 JSON 資料：');
+  if (!json) return;
+  const imported = projectManager.importJSON(json);
+  if (imported) {
+    uiBridge.syncFromProject(imported);
+    historyRenderer.render('history');
+    UI.setStatus('lyricStatus', '✅ 已匯入專案', true);
+  } else {
+    UI.setStatus('lyricStatus', '❌ JSON 格式錯誤', false);
+  }
+});
+
+document.getElementById('applyPresetBtn').addEventListener('click', async () => {
+  const presetName = UI.getValue('presetSelect');
+  const preset = await presetLoader.loadPreset(presetName);
+  if (!preset) {
+    UI.setStatus('lyricStatus', '❌ 載入模式失敗', false);
+    return;
+  }
+
+  const updated = presetLoader.applyPresetToProject(projectManager.currentProject, presetName);
+  projectManager.saveCurrentProject(updated);
+  UI.setStatus('lyricStatus', `✅ 已套用 ${preset.name}`, true);
+});
+
+document.getElementById('testWorkerBtn').addEventListener('click', async () => {
+  const workerUrl = UI.getValue('worker').trim().replace(/\/+$/, '');
+  UI.setStatus('workerStatus', '測試中…');
+  try {
+    const response = await fetch(workerUrl + '/health');
+    const json = await response.json();
+    if (!json.ok) throw new Error('狀態異常');
+    UI.setStatus('workerStatus', 'Worker 連線成功。', true);
+    UI.get('workerBadge').classList.add('ok');
+    UI.get('workerBadge').textContent = 'Worker 連線成功';
+  } catch (error) {
+    UI.setStatus('workerStatus', '連線失敗：' + error.message, false);
+  }
+});
+
+document.getElementById('generateSongBtn').addEventListener('click', async () => {
+  const lyrics = UI.getValue('lyrics');
+  if (!lyrics) {
+    UI.setStatus('genStatus', '請先生成或輸入歌詞。', false);
+    return;
+  }
+
+  updateProjectFromUI();
+  const workerUrl = UI.getValue('worker').trim().replace(/\/+$/, '');
+  UI.setStatus('genStatus', '正在呼叫 Worker…');
+
+  try {
+    const response = await fetch(workerUrl + '/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectManager.currentProject)
+    });
+
+    if (!response.ok) {
+      let message = 'HTTP ' + response.status;
+      try {
+        const json = await response.json();
+        message = json.error || message;
+      } catch (e) {}
+      throw new Error(message);
+    }
+
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('收到空白音訊');
+    if (window.currentAudioUrl) URL.revokeObjectURL(window.currentAudioUrl);
+    window.currentAudioUrl = URL.createObjectURL(blob);
+
+    UI.get('player').src = window.currentAudioUrl;
+    UI.get('downloadLink').href = window.currentAudioUrl;
+    UI.get('downloadLink').download = (projectManager.currentProject.title || 'ai-music').replace(/[\[\]：:]/g, '') + '.mp3';
+    UI.show(UI.get('playerBox'));
+    UI.setStatus('genStatus', '✅ 歌曲生成完成。', true);
+  } catch (error) {
+    const msg = String(error.message || '');
+    UI.setStatus('genStatus', msg.includes('API_KEY') ? 'Worker 正常，但目前尚未設定音樂 API Key。' : '生成失敗：' + msg, false);
+  }
+});
+
+document.getElementById('history').addEventListener('click', (event) => {
+  const btn = event.target.closest('.history-load');
+  if (!btn) return;
+  const index = Number(btn.dataset.index);
+  const history = projectManager.getHistory();
+  const target = history[index];
+  if (!target) return;
+  const loaded = projectManager.loadProject(target.projectId);
+  if (loaded) {
+    uiBridge.syncFromProject(loaded);
+    UI.setStatus('lyricStatus', '✨ 已載入舊專案', true);
+  }
+});
+
+document.getElementById('history').addEventListener('click', (event) => {
+  const btn = event.target.closest('.history-delete');
+  if (!btn) return;
+  const index = Number(btn.dataset.index);
+  const history = projectManager.getHistory();
+  const target = history[index];
+  if (!target) return;
+  if (confirm('確定要刪除此專案嗎？')) {
+    projectManager.deleteProject(target.projectId);
+    historyRenderer.render('history');
+  }
+});
+
+console.log('AI MV Studio event wiring complete');
 </script>
 </body>
 </html>
