@@ -1,466 +1,76 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0d12">
-<title>AI 音樂生成工作室 v1.0 MV</title>
 <style>
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:radial-gradient(circle at 15% 0%,rgba(116,91,255,.18),transparent 30%),#0b0d12;color:#fff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
-main{max-width:920px;margin:auto;padding:20px 14px 64px}
-h1{font-size:clamp(36px,8vw,58px);margin:8px 0 10px;line-height:1.02}
-h2{font-size:20px;margin:0 0 12px}
-p,.muted{color:#aeb6c7;line-height:1.6}
-.badge,.pill{display:inline-flex;align-items:center;border:1px solid #3b4559;border-radius:999px;padding:6px 10px;font-size:12px;background:#121722;color:#d7dfec}
-.pill.ok{border-color:#315a43;color:#b7efd0}
-.card{background:#151922;border:1px solid #303747;border-radius:18px;padding:16px;margin-top:14px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-label{display:block;margin:12px 0 5px;color:#cbd2df;font-size:14px}
-input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #3b4454;background:#0e1118;color:#fff;font:inherit}
-textarea{min-height:145px;resize:vertical}
-.small{min-height:85px}
-button{padding:11px 13px;border:0;border-radius:10px;font-weight:750;cursor:pointer;font:inherit}
-.primary{width:100%;margin-top:12px;background:#fff;color:#111}
-.secondary{background:#293142;color:#fff}
-.ghost{background:transparent;color:#d8deea;border:1px solid #394151}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.status{margin-top:12px;padding:11px;border-radius:10px;background:#10151d;border:1px solid #323b4c;color:#aeb6c7;line-height:1.5}
-.ok{color:#b7efd0;border-color:#315a43}
-.err{color:#ffc0c8;border-color:#713f48}
-.hidden{display:none!important}
-pre{white-space:pre-wrap;word-break:break-word;background:#0c1016;padding:12px;border-radius:10px;max-height:430px;overflow:auto;line-height:1.55}
-audio{width:100%}
-.history-item{padding:10px 0;border-bottom:1px solid #2d3442}
-.history-item:last-child{border-bottom:0}
-.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-@media(max-width:650px){.grid,.grid3{grid-template-columns:1fr}.top{display:block}.top .pill{margin-top:8px}}
+.story-container{margin-top:18px;padding:14px;border:1px solid #303747;border-radius:16px;background:#10161f}
+.story-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.story-shot{padding:12px;border:1px solid #394151;border-radius:12px;background:#0f141c}
+.story-shot strong{display:block;margin-bottom:6px}
+.story-meta{font-size:12px;color:#b9c4d9;line-height:1.6}
+.story-preview{margin-top:12px;padding:12px;border-radius:10px;background:#0b0e14;border:1px solid #2d394f;color:#d9e3f0;white-space:pre-wrap;font-size:13px;line-height:1.6}
+@media(max-width:700px){.story-grid{grid-template-columns:1fr}}
 </style>
-</head>
-<body>
-<main>
-<div class="top">
-  <div>
-    <span class="badge">AI MUSIC STUDIO · v1.0 MV</span>
-    <h1>AI 音樂生成工作室</h1>
-    <p>角色歌曲、隨機歌名、不同歌詞版本、武戲／抒情／登場／決戰模式、台語／國語／混合、提示詞、專案儲存、Cloudflare Worker 測試與歌曲播放。升級版支援 AI 分鏡、圖片生成、影片製作。</p>
-  </div>
-  <span id="workerBadge" class="pill">Worker 未測試</span>
-</div>
 
 <section class="card">
-<h2>1. 角色與歌曲方向</h2>
-<div class="grid">
-  <div>
-    <label>角色／主題</label>
-    <select id="character">
-      <option value="custom">自訂主題</option>
-      <option value="mofu">魔佛波旬</option>
-      <option value="moonfan">月扇影喵</option>
-      <option value="liuli">琉璃喵</option>
-      <option value="bai">白狂天喵</option>
-      <option value="fire">焚天赤焰喵</option>
-      <option value="suili">歲璃喵</option>
-      <option value="blood">血紋劍喵</option>
-    </select>
+  <h2>9. AI 分鏡 / Storyboard</h2>
+  <div class="story-container">
+    <div class="story-header">
+      <div>
+        <strong>自動分鏡</strong>
+        <div class="muted" style="font-size:12px; margin-top:4px;">依歌詞內容生成鏡頭序列，可接後續圖片生成與影片生產</div>
+      </div>
+      <button class="secondary" id="generateStoryboardBtn">生成分鏡</button>
+    </div>
+    <div class="story-grid" id="storyboardList"></div>
+    <div class="story-preview" id="storyboardPromptPreview">尚未生成分鏡。</div>
   </div>
-  <div>
-    <label>自訂主題</label>
-    <input id="theme" placeholder="例如：宿命決戰、月下孤城、破界重生">
-  </div>
-  <div>
-    <label>歌曲模式</label>
-    <select id="mode">
-      <option value="intro">角色登場</option>
-      <option value="battle">爆款武戲</option>
-      <option value="ballad">抒情主題曲</option>
-      <option value="final">最終決戰</option>
-    </select>
-  </div>
-  <div>
-    <label>副歌強度</label>
-    <select id="hook">
-      <option value="normal">標準</option>
-      <option value="strong" selected>強烈</option>
-      <option value="max">超強爆點</option>
-    </select>
-  </div>
-</div>
-<button class="primary" id="autoLyricsBtn">✨ 生成全新歌詞＋隨機歌名</button>
-<div id="lyricStatus" class="status">同一角色每按一次都會重新組合歌名、主歌、副歌與橋段。</div>
 </section>
-
-<section class="card">
-<h2>2. 歌曲與歌詞</h2>
-<label>歌曲名稱</label>
-<input id="title" placeholder="會自動生成，也可以手動修改">
-<label>歌詞</label>
-<textarea id="lyrics" placeholder="按上方生成，或貼入自己的歌詞"></textarea>
-</section>
-
-<section class="card">
-<h2>3. 音樂設定</h2>
-<div class="grid3">
-  <div>
-    <label>曲風</label>
-    <select id="style">
-      <option>電影級武俠</option>
-      <option>台語流行</option>
-      <option>史詩搖滾</option>
-      <option>電子國風</option>
-      <option>抒情古風</option>
-      <option>暗黑交響</option>
-      <option>電影配樂</option>
-    </select>
-  </div>
-  <div>
-    <label>語言</label>
-    <select id="language">
-      <option>繁體中文</option>
-      <option>台語</option>
-      <option>中文＋台語混合</option>
-    </select>
-  </div>
-  <div>
-    <label>聲線</label>
-    <select id="voice">
-      <option>女聲・霸氣</option>
-      <option>女聲・清亮</option>
-      <option>女聲・溫柔</option>
-      <option>女聲・低沉</option>
-      <option>女聲・戲劇</option>
-    </select>
-  </div>
-  <div>
-    <label>情緒</label>
-    <select id="mood">
-      <option>氣勢磅礡</option>
-      <option>熱血</option>
-      <option>神秘</option>
-      <option>悲壯</option>
-      <option>溫柔</option>
-      <option>空靈</option>
-    </select>
-  </div>
-  <div>
-    <label>歌曲長度</label>
-    <select id="duration">
-      <option value="30">30 秒</option>
-      <option value="60" selected>60 秒</option>
-      <option value="120">2 分鐘</option>
-      <option value="180">3 分鐘</option>
-    </select>
-  </div>
-  <div>
-    <label>速度</label>
-    <select id="tempo">
-      <option>慢板</option>
-      <option selected>中板</option>
-      <option>快板</option>
-      <option>自由速度</option>
-    </select>
-  </div>
-</div>
-<label>額外要求</label>
-<textarea id="notes" class="small" placeholder="例如：戰鼓更重、副歌更洗腦、前奏 5 秒內進人聲"></textarea>
-<button class="primary" id="makePromptBtn">建立歌曲製作提示詞</button>
-<div class="row">
-  <button class="secondary" id="saveProjectBtn">💾 儲存設定</button>
-  <button class="ghost" id="clearSongBtn">清空</button>
-  <button class="ghost" id="exportJsonBtn">📥 匯出 JSON</button>
-  <button class="ghost" id="importJsonBtn">📤 匯入 JSON</button>
-</div>
-</section>
-
-<section id="promptBox" class="card hidden">
-<h2>4. 歌曲提示詞</h2>
-<pre id="output"></pre>
-<div class="row">
-  <button class="secondary" id="copyPromptBtn">複製提示詞</button>
-  <button class="ghost" id="downloadPromptBtn">下載提示詞</button>
-</div>
-</section>
-
-<section class="card">
-<h2>5. Preset / 模式選擇</h2>
-<div class="grid">
-  <div>
-    <label>MV 模式</label>
-    <select id="presetSelect">
-      <option value="general-mv">一般 MV 模式</option>
-      <option value="maozhang-jianghu">《貓掌江湖》模式</option>
-      <option value="miao-taiwan">《喵台灣宇宙》模式</option>
-    </select>
-  </div>
-  <div style="display: flex; align-items: flex-end;">
-    <button class="secondary" id="applyPresetBtn" style="width: 100%; margin-top: 12px;">套用模式</button>
-  </div>
-</div>
-</section>
-
-<section class="card">
-<h2>6. Cloudflare Worker</h2>
-<label>Worker 網址</label>
-<input id="worker" value="https://snowy-silence-5370.gogototo24.workers.dev">
-<button class="primary" id="testWorkerBtn">測試後端</button>
-<div id="workerStatus" class="status">尚未測試 Worker。</div>
-</section>
-
-<section class="card">
-<h2>7. 生成歌曲</h2>
-<button class="primary" id="generateSongBtn">🎵 生成歌曲</button>
-<div id="genStatus" class="status">目前若沒有音樂 API Key，這一步會顯示尚未設定；前面的免費歌詞與提示詞功能仍可使用。</div>
-</section>
-
-<section id="playerBox" class="card hidden">
-<h2>歌曲完成</h2>
-<audio id="player" controls></audio>
-<div class="row">
-  <a id="downloadLink" download="ai-music.mp3"><button class="secondary">⬇ 下載 MP3</button></a>
-</div>
-</section>
-
-<section class="card">
-<h2>8. 最近儲存</h2>
-<div id="history" class="muted">目前沒有儲存的歌曲。</div>
-</section>
-</main>
 
 <script type="module">
-import { UI } from './src/modules/ui/ui-core.js';
-import { projectManager } from './src/core/project-manager.js';
-import { uiBridge } from './src/core/ui-bridge.js';
-import { historyRenderer } from './src/core/history-renderer.js';
-import { projectExport } from './src/core/project-export.js';
-import { LyricsEditor } from './src/modules/lyrics/lyrics-editor.js';
-import { presetLoader } from './src/modules/preset/preset-loader.js';
+import { analyzeLyricsToShots, buildShotPrompt, renderStoryboardShots } from './src/modules/storyboard/storyboard-renderer.js';
 
-console.log('AI MV Studio v1 initialized');
-
-uiBridge.syncFromProject(projectManager.currentProject);
-historyRenderer.render('history');
-
-function updateProjectFromUI() {
-  const project = projectManager.currentProject;
-  project.title = UI.getValue('title');
-  project.lyrics = UI.getValue('lyrics');
-  project.style = UI.getValue('style');
-  project.language = UI.getValue('language');
-  project.mood = UI.getValue('mood');
-  project.notes = UI.getValue('notes');
-  project.character = UI.getValue('character');
-  project.theme = UI.getValue('theme');
-  project.mode = UI.getValue('mode');
-  project.music = project.music || {};
-  project.music.duration = UI.getValue('duration');
-  project.music.tempo = UI.getValue('tempo');
-  project.voice = project.voice || {};
-  project.voice.gender = 'female';
-  project.voice.tone = UI.getValue('voice');
-  project.voice.language = project.language;
-  projectManager.saveCurrentProject(project);
-}
-
-document.getElementById('autoLyricsBtn').addEventListener('click', () => {
-  const characterId = UI.getValue('character');
-  const customTheme = UI.getValue('theme');
-  const mode = UI.getValue('mode');
-  const language = UI.getValue('language');
-  const hookMode = UI.getValue('hook');
-
-  const generated = LyricsEditor.generateLyrics(characterId, customTheme, mode, language, hookMode);
-  UI.setValue('title', generated.title);
-  UI.setValue('lyrics', generated.lyrics);
-  UI.setValue('style', generated.style);
-  UI.setValue('voice', generated.voice);
-  UI.setValue('mood', generated.mood);
-
-  updateProjectFromUI();
-  UI.setStatus('lyricStatus', '✨ 已生成新版本；再按一次會換歌名、畫面句、副歌與橋段。', true);
-});
-
-document.getElementById('makePromptBtn').addEventListener('click', () => {
-  const lyrics = UI.getValue('lyrics');
-  if (!lyrics) {
-    UI.alert('請先生成或輸入歌詞');
+const makeStoryboard = () => {
+  const lyrics = document.getElementById('lyrics').value;
+  if (!lyrics.trim()) {
+    alert('請先輸入或生成歌詞');
     return;
   }
 
-  updateProjectFromUI();
-  const prompt = projectExport.generateMusicPrompt();
-  UI.setText('output', prompt);
-  window.currentPrompt = prompt;
-  UI.show(UI.get('promptBox'));
+  const shots = analyzeLyricsToShots(lyrics, { duration: 5 });
+  renderStoryboardShots(shots, 'storyboardList');
+
+  const first = shots[0];
+  const prompt = buildShotPrompt(first, {
+    title: document.getElementById('title').value || 'AI MV',
+    style: document.getElementById('style').value || 'cinematic',
+    preset: document.getElementById('presetSelect')?.value || 'general-mv',
+    ratio: '9:16',
+    characterConsistency: true
+  });
+
+  document.getElementById('storyboardPromptPreview').textContent = prompt;
+  document.getElementById('storyboardPromptPreview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+document.getElementById('generateStoryboardBtn').addEventListener('click', makeStoryboard);
+
+document.getElementById('storyboardList').addEventListener('click', (e) => {
+  const generateBtn = e.target.closest('.storyboard-generate');
+  const regenerateBtn = e.target.closest('.storyboard-regenerate');
+  if (!generateBtn && !regenerateBtn) return;
+
+  const shotId = (generateBtn || regenerateBtn).dataset.shotId;
+  const lyrics = document.getElementById('lyrics').value;
+  const shots = analyzeLyricsToShots(lyrics, { duration: 5 });
+  const shot = shots.find(item => item.id === shotId) || shots[0];
+
+  const prompt = buildShotPrompt(shot, {
+    title: document.getElementById('title').value || 'AI MV',
+    style: document.getElementById('style').value || 'cinematic',
+    preset: document.getElementById('presetSelect')?.value || 'general-mv',
+    ratio: '9:16',
+    characterConsistency: true
+  });
+
+  document.getElementById('storyboardPromptPreview').textContent = prompt;
+  alert('已準備此鏡頭的生成 Prompt：\n\n' + prompt);
 });
-
-document.getElementById('copyPromptBtn').addEventListener('click', async () => {
-  if (!window.currentPrompt) {
-    document.getElementById('makePromptBtn').click();
-  }
-  try {
-    await navigator.clipboard.writeText(window.currentPrompt || '');
-    UI.alert('已複製到剪貼板');
-  } catch (error) {
-    UI.alert('複製失敗，請手動複製');
-  }
-});
-
-document.getElementById('downloadPromptBtn').addEventListener('click', () => {
-  const text = window.currentPrompt || UI.getValue('lyrics');
-  if (!text) {
-    UI.alert('目前沒有可下載的提示詞');
-    return;
-  }
-  const blob = new Blob([text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'music-prompt.txt';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-document.getElementById('saveProjectBtn').addEventListener('click', () => {
-  updateProjectFromUI();
-  const status = projectManager.saveToHistory();
-  if (status) {
-    historyRenderer.render('history');
-    UI.setStatus('lyricStatus', '✅ 已儲存到歷史列表', true);
-  } else {
-    UI.setStatus('lyricStatus', '⚠️ 無法儲存不完整的專案', false);
-  }
-});
-
-document.getElementById('clearSongBtn').addEventListener('click', () => {
-  if (!confirm('確定要清空所有資料嗎？')) return;
-  UI.setValue('title', '');
-  UI.setValue('lyrics', '');
-  UI.setValue('notes', '');
-  UI.setValue('theme', '');
-  UI.hide(UI.get('promptBox'));
-  projectManager.clearCurrent();
-  UI.setStatus('lyricStatus', '已清空', false);
-});
-
-document.getElementById('exportJsonBtn').addEventListener('click', () => {
-  updateProjectFromUI();
-  projectExport.downloadJSON();
-});
-
-document.getElementById('importJsonBtn').addEventListener('click', () => {
-  const json = prompt('貼入 JSON 資料：');
-  if (!json) return;
-  const imported = projectManager.importJSON(json);
-  if (imported) {
-    uiBridge.syncFromProject(imported);
-    historyRenderer.render('history');
-    UI.setStatus('lyricStatus', '✅ 已匯入專案', true);
-  } else {
-    UI.setStatus('lyricStatus', '❌ JSON 格式錯誤', false);
-  }
-});
-
-document.getElementById('applyPresetBtn').addEventListener('click', async () => {
-  const presetName = UI.getValue('presetSelect');
-  const preset = await presetLoader.loadPreset(presetName);
-  if (!preset) {
-    UI.setStatus('lyricStatus', '❌ 載入模式失敗', false);
-    return;
-  }
-
-  const updated = presetLoader.applyPresetToProject(projectManager.currentProject, presetName);
-  projectManager.saveCurrentProject(updated);
-  UI.setStatus('lyricStatus', `✅ 已套用 ${preset.name}`, true);
-});
-
-document.getElementById('testWorkerBtn').addEventListener('click', async () => {
-  const workerUrl = UI.getValue('worker').trim().replace(/\/+$/, '');
-  UI.setStatus('workerStatus', '測試中…');
-  try {
-    const response = await fetch(workerUrl + '/health');
-    const json = await response.json();
-    if (!json.ok) throw new Error('狀態異常');
-    UI.setStatus('workerStatus', 'Worker 連線成功。', true);
-    UI.get('workerBadge').classList.add('ok');
-    UI.get('workerBadge').textContent = 'Worker 連線成功';
-  } catch (error) {
-    UI.setStatus('workerStatus', '連線失敗：' + error.message, false);
-  }
-});
-
-document.getElementById('generateSongBtn').addEventListener('click', async () => {
-  const lyrics = UI.getValue('lyrics');
-  if (!lyrics) {
-    UI.setStatus('genStatus', '請先生成或輸入歌詞。', false);
-    return;
-  }
-
-  updateProjectFromUI();
-  const workerUrl = UI.getValue('worker').trim().replace(/\/+$/, '');
-  UI.setStatus('genStatus', '正在呼叫 Worker…');
-
-  try {
-    const response = await fetch(workerUrl + '/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(projectManager.currentProject)
-    });
-
-    if (!response.ok) {
-      let message = 'HTTP ' + response.status;
-      try {
-        const json = await response.json();
-        message = json.error || message;
-      } catch (e) {}
-      throw new Error(message);
-    }
-
-    const blob = await response.blob();
-    if (!blob.size) throw new Error('收到空白音訊');
-    if (window.currentAudioUrl) URL.revokeObjectURL(window.currentAudioUrl);
-    window.currentAudioUrl = URL.createObjectURL(blob);
-
-    UI.get('player').src = window.currentAudioUrl;
-    UI.get('downloadLink').href = window.currentAudioUrl;
-    UI.get('downloadLink').download = (projectManager.currentProject.title || 'ai-music').replace(/[\[\]：:]/g, '') + '.mp3';
-    UI.show(UI.get('playerBox'));
-    UI.setStatus('genStatus', '✅ 歌曲生成完成。', true);
-  } catch (error) {
-    const msg = String(error.message || '');
-    UI.setStatus('genStatus', msg.includes('API_KEY') ? 'Worker 正常，但目前尚未設定音樂 API Key。' : '生成失敗：' + msg, false);
-  }
-});
-
-document.getElementById('history').addEventListener('click', (event) => {
-  const btn = event.target.closest('.history-load');
-  if (!btn) return;
-  const index = Number(btn.dataset.index);
-  const history = projectManager.getHistory();
-  const target = history[index];
-  if (!target) return;
-  const loaded = projectManager.loadProject(target.projectId);
-  if (loaded) {
-    uiBridge.syncFromProject(loaded);
-    UI.setStatus('lyricStatus', '✨ 已載入舊專案', true);
-  }
-});
-
-document.getElementById('history').addEventListener('click', (event) => {
-  const btn = event.target.closest('.history-delete');
-  if (!btn) return;
-  const index = Number(btn.dataset.index);
-  const history = projectManager.getHistory();
-  const target = history[index];
-  if (!target) return;
-  if (confirm('確定要刪除此專案嗎？')) {
-    projectManager.deleteProject(target.projectId);
-    historyRenderer.render('history');
-  }
-});
-
-console.log('AI MV Studio event wiring complete');
 </script>
-</body>
-</html>
