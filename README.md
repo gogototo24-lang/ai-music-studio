@@ -1,26 +1,29 @@
-# AI 音樂生成工作室
+# AI 音樂生成工作室 v1.0
 
-第一版原型，目標是建立一個可逐步擴充的 AI 音樂生成 Web App。
+這個 repository 是目前的 **v1.0 前端版本**，以 GitHub Pages 提供瀏覽器介面。真正的後端、語音、音樂、混音與 MV 生成能力已移到 `ai-music-studio-v2`。
 
-## v0.1 已有
-- 歌曲名稱與歌詞輸入
-- 曲風選擇
+## v1.0 已有
+- 角色／主題選擇
+- 歌曲模式：登場、武戲、抒情、最終決戰
+- 自動歌名與歌詞
 - 繁體中文／台語／混合語言
-- 女聲聲線選擇
-- 情緒與歌曲長度設定
-- 產生標準化歌曲生成提示
-- 匯出歌曲任務 JSON
+- 女聲聲線、情緒、速度與歌曲長度設定
+- 標準化歌曲提示詞
+- 專案儲存
+- Cloudflare Worker 連線測試
+- 音訊播放與下載介面
+
+## 專案定位
+- `ai-music-studio`：前端／GitHub Pages
+- `ai-music-studio-v2`：FastAPI 後端、語音、音樂、混音、MV
+- `threads-scheduler`：喵台灣／貓掌江湖內容排程與 AI 草稿工作流
+- `codexskills/video-prompt-builder`：影片提示詞標準化
 
 ## 下一階段
-1. 串接真正的音樂生成 API
-2. 加入台語 TTS／聲線模組
-3. 儲存生成歷史
-4. 下載 MP3
-5. AI 歌詞助手
-6. AI 封面圖生成
-7. 手機版 PWA
+新功能原則上不要再堆進這個 v1.0 repo；優先加到 `ai-music-studio-v2` 或 `threads-scheduler`，前端只保留 UI 與 API 呼叫。
 
-## 本機使用
-直接用瀏覽器開啟 `index.html` 即可。
+## GitHub Pages
+部署由 `.github/workflows/pages.yml` 處理。首頁版本以 `index.html` 顯示的 `v1.0` 為準。
 
-> 注意：v0.1 是前端原型，不包含任何 API 金鑰。之後串接外部服務時，金鑰必須放在伺服器端，不要寫進前端程式碼。
+## 安全
+API 金鑰、Threads token、Higgsfield／PixVerse／OpenAI 憑證都只能放在伺服器端環境變數或 Secret，不能寫進 `index.html`、`app.js` 或任何公開 repository。
