@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>貓掌 MV＋聲線工作台</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 15% 0%,rgba(99,102,241,.2),transparent 34%),#0b0d12;color:#fff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+main{max-width:900px;margin:auto;padding:18px 14px 70px}
+h1{font-size:clamp(30px,7vw,50px);line-height:1.05;margin:8px 0}h2{font-size:20px;margin:0 0 12px}
+p,.muted{color:#adb7c9;line-height:1.6}
+.card{background:#141923;border:1px solid #30394b;border-radius:18px;padding:16px;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;margin:10px 0 5px;color:#d3d9e5;font-size:14px}
+input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #3b465b;background:#0d1118;color:#fff;font:inherit}
+textarea{min-height:105px;resize:vertical}
+button,.linkbtn{display:inline-block;padding:11px 13px;border-radius:10px;font:inherit;font-weight:750;border:0;cursor:pointer;text-decoration:none}
+.primary{background:#fff;color:#111827}.secondary{background:#293248;color:#fff}.ghost{background:transparent;color:#dbeafe;border:1px solid #3c4961}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.status{margin-top:10px;padding:11px;border-radius:10px;background:#0f151e;border:1px solid #303b4e;color:#b7c2d5;line-height:1.5;word-break:break-word}
+.ok{border-color:#315a43;color:#b7efd0}.err{border-color:#713f48;color:#ffc0c8}
+audio,video{width:100%;border-radius:12px;margin-top:10px;background:#000}
+.badge{display:inline-flex;border:1px solid #39445a;border-radius:999px;padding:6px 10px;font-size:12px;background:#111827;color:#dbeafe}
+small{color:#8e9ab0}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<span class="badge">MV + VOICE STUDIO · v2.1</span>
+<h1>貓掌 MV＋聲線工作台</h1>
+<p>先試角色口白，再把圖片／影片與完成音訊合成 9:16 MV。多個素材會依選取順序播放。</p>
+<div class="row">
+<a class="linkbtn secondary" href="./storyboard.html">🎬 Storyboard</a>
+<a class="linkbtn ghost" href="./">🎵 音樂工作室</a>
+</div>
+
+<section class="card">
+<h2>0. 後端連線</h2>
+<label>AI Music Studio v2 API</label>
+<input id="apiBase" value="https://ai-music-studio-v2.onrender.com">
+<div class="row"><button class="secondary" onclick="saveApi()">儲存網址</button><button class="ghost" onclick="health()">檢查後端</button></div>
+<div id="healthStatus" class="status">先按「檢查後端」。</div>
+</section>
+
+<section class="card">
+<h2>1. 角色聲線</h2>
+<label>角色建議</label>
+<select id="character" onchange="applyCharacterVoice()">
+<option value="white-emperor">白帝喵尊</option>
+<option value="moonfan">月扇影喵</option>
+<option value="suili">歲璃喵</option>
+<option value="white-crazy">白狂天喵</option>
+<option value="fire">焚天赤焰喵</option>
+<option value="liuli">琉璃喵</option>
+<option value="miaotaiwan">喵台灣</option>
+<option value="custom">自訂</option>
+</select>
+<label>聲線</label>
+<select id="voicePreset" onchange="voiceHint()">
+<option value="empress">皇者威儀</option>
+<option value="heroine">冷豔女俠</option>
+<option value="ethereal">空靈女聲</option>
+<option value="overlord">霸氣女王</option>
+<option value="narrator">電影旁白</option>
+<option value="gentle">溫柔女聲</option>
+<option value="youth">青春女聲</option>
+<option value="battle">武戲喝聲</option>
+</select>
+<div id="voiceHint" class="status"></div>
+<label>試聽文字</label>
+<textarea id="voiceText">雲巔無聲，唯吾一念，萬象歸寂。</textarea>
+<label><input id="reverb" type="checkbox" checked style="width:auto"> 加入殿堂／電影感殘響</label>
+<button class="primary" onclick="makeVoice()">🔊 生成並試聽</button>
+<div id="voiceOut"></div>
+<p class="muted">目前內建是台灣中文 spoken TTS 聲線，不是原生台語歌唱模型；台語聲線可再接獨立 provider。</p>
+</section>
+
+<section class="card">
+<h2>2. 直式 MV</h2>
+<div class="grid">
+<div><label>比例</label><select id="aspect"><option value="9:16">9:16 Shorts / Reels</option><option value="16:9">16:9 YouTube</option></select></div>
+<div><label>秒數</label><input id="duration" type="number" min="5" max="60" value="15"></div>
+</div>
+<label>MV 標題</label><input id="title" value="白帝喵尊・天外一念">
+<label>字幕／口白／歌詞</label><textarea id="lyrics">雲巔無聲
+唯吾一念
+萬象歸寂</textarea>
+<label>完成音訊</label><input id="audioFile" type="file" accept="audio/*">
+<label>圖片／影片素材（最多 12 個）</label><input id="mediaFiles" type="file" accept="image/*,video/*" multiple>
+<label><input id="burn" type="checkbox" checked style="width:auto"> 將上方文字燒錄成字幕</label>
+<button class="primary" onclick="renderMv()">🎞️ 合成 MV</button>
+<div id="mvOut" class="status">尚未送出 MV。</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const hints={
+heroine:"冷靜、俐落、帶距離感；月扇影喵首選。",
+overlord:"低沉、穩重、壓迫感較強；白狂天喵、焚天赤焰喵適合。",
+empress:"慢速、厚重、峰主／帝尊氣場；白帝喵尊首選。",
+narrator:"敘事穩定；適合詩號、預告與世界觀旁白。",
+gentle:"柔和自然；琉璃喵、文戲與喵台灣適合。",
+ethereal:"清透、慢速、夢幻；歲璃喵、星織霜雨適合。",
+youth:"明亮、稍快；輕快社群短片適合。",
+battle:"短句、快速、俐落；招式名或 2–6 秒武戲口白適合。"
+};
+const characterVoice={
+"white-emperor":"empress",moonfan:"heroine",suili:"ethereal",
+"white-crazy":"overlord",fire:"overlord",liuli:"gentle",miaotaiwan:"youth"
+};
+
+function apiBase(){return $("apiBase").value.trim().replace(/\/+$/,"")}
+function api(path){return path.startsWith("http")?path:apiBase()+path}
+function saveApi(){localStorage.setItem("aiMusicV2Api",apiBase());alert("已儲存")}
+function voiceHint(){$("voiceHint").textContent=hints[$("voicePreset").value]||""}
+function applyCharacterVoice(){const p=characterVoice[$("character").value];if(p)$("voicePreset").value=p;voiceHint()}
+
+async function jsonFetch(path,opt={}){
+  const r=await fetch(api(path),opt);
+  let j={};try{j=await r.json()}catch{}
+  if(!r.ok)throw Error(j.detail||j.error||("HTTP "+r.status));
+  return j;
+}
+
+async function health(){
+  $("healthStatus").textContent="連線中…";
+  try{
+    const j=await jsonFetch("/health");
+    $("healthStatus").className="status ok";
+    $("healthStatus").textContent=`連線成功｜${j.service||"AI Music Studio v2"} ${j.version||""}｜FFmpeg: ${j.ffmpeg}`;
+  }catch(e){
+    $("healthStatus").className="status err";
+    $("healthStatus").textContent="後端無法連線："+e.message+"。可確認 Render 是否已部署或修改 API 網址。";
+  }
+}
+
+async function makeVoice(){
+  const text=$("voiceText").value.trim();if(!text)return alert("請輸入口白");
+  $("voiceOut").innerHTML='<div class="status">聲線生成中…</div>';
+  try{
+    const j=await jsonFetch("/api/voice/generate",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text,preset:$("voicePreset").value,enable_reverb:$("reverb").checked})
+    });
+    const u=api(j.audio_url);
+    $("voiceOut").innerHTML=`<div class="status ok">${j.preset_name||"聲線完成"}</div><audio controls src="${u}"></audio><p><a href="${u}" target="_blank" style="color:#c7d2fe">開啟音檔</a></p>`;
+  }catch(e){$("voiceOut").innerHTML=`<div class="status err">${e.message}</div>`}
+}
+
+async function renderMv(){
+  const a=$("audioFile").files[0],m=[...$("mediaFiles").files];
+  if(!a)return alert("請先選完成音訊");
+  if(!m.length)return alert("至少選一張圖片或一段影片");
+  if(m.length>12)return alert("一次最多 12 個素材");
+  const fd=new FormData();
+  fd.append("title",$("title").value.trim()||"AI MV");
+  fd.append("lyrics",$("lyrics").value);
+  fd.append("aspect",$("aspect").value);
+  fd.append("duration",$("duration").value);
+  fd.append("burn_subtitles",$("burn").checked?"true":"false");
+  fd.append("audio_file",a);
+  m.forEach(f=>fd.append("media_files",f));
+  $("mvOut").className="status";
+  $("mvOut").textContent="已送出，正在背景合成…";
+  try{
+    const j=await jsonFetch("/api/mv/render",{method:"POST",body:fd});
+    for(let i=0;i<120;i++){
+      await new Promise(r=>setTimeout(r,2000));
+      const s=await jsonFetch("/api/mv/status/"+j.job_id);
+      $("mvOut").textContent=`MV 狀態：${s.status}｜已等待 ${(i+1)*2} 秒`;
+      if(s.status==="success"){
+        const u=api(s.video_url),sub=s.subtitle_url?api(s.subtitle_url):"";
+        const meta=s.meta||{};
+        $("mvOut").className="status ok";
+        $("mvOut").innerHTML=`完成｜素材 ${meta.media_count||m.length} 個｜${meta.width||""}×${meta.height||""}｜字幕燒錄：${meta.subtitles_burned?"是":"否"}<video controls src="${u}"></video><p><a href="${u}" target="_blank" style="color:#c7d2fe">開啟 MP4</a>${sub?` · <a href="${sub}" target="_blank" style="color:#c7d2fe">SRT 字幕</a>`:""}</p>`;
+        return;
+      }
+      if(s.status==="error")throw Error(s.detail||"MV 合成失敗");
+    }
+    throw Error("等待逾時；任務可能仍在後端執行");
+  }catch(e){$("mvOut").className="status err";$("mvOut").textContent=e.message}
+}
+
+const saved=localStorage.getItem("aiMusicV2Api");if(saved)$("apiBase").value=saved;
+applyCharacterVoice();
+</script>
+</body>
+</html>
