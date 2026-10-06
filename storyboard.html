@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>AI MV Storyboard Studio</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(99,102,241,.22),transparent 34%),#0b0d12;color:#f8fafc;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+main{max-width:980px;margin:auto;padding:18px 14px 72px}
+a{color:#c7d2fe;text-decoration:none}
+h1{font-size:clamp(30px,7vw,52px);line-height:1.05;margin:8px 0}
+h2{font-size:19px;margin:0 0 12px}
+p,.muted{color:#aeb7c8;line-height:1.65}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.badge,.pill{display:inline-flex;align-items:center;border:1px solid #39445a;border-radius:999px;padding:6px 10px;font-size:12px;background:#111827;color:#dbeafe}
+.card{background:#141923;border:1px solid #2d3546;border-radius:18px;padding:16px;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+label{display:block;margin:10px 0 5px;color:#d2d9e6;font-size:13px}
+input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #3a455b;background:#0d1118;color:#fff;font:inherit}
+textarea{min-height:100px;resize:vertical}
+button{padding:11px 13px;border:0;border-radius:10px;font:inherit;font-weight:750;cursor:pointer}
+.primary{background:#f8fafc;color:#111827}
+.secondary{background:#283248;color:#fff}
+.ghost{background:transparent;color:#dbeafe;border:1px solid #3c4961}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#0f151e;border:1px solid #303b4e;color:#b7c2d5;line-height:1.5}
+.ok{border-color:#315a43;color:#b7efd0}
+.err{border-color:#713f48;color:#ffc0c8}
+.shot{margin-top:12px;padding:14px;border:1px solid #39445a;border-radius:14px;background:#0f141c}
+.shothead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+pre{white-space:pre-wrap;word-break:break-word;background:#090d13;border:1px solid #252e3d;padding:12px;border-radius:10px;line-height:1.55;max-height:360px;overflow:auto}
+.lock{font-size:13px;color:#cbd5e1;line-height:1.7}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+@media(max-width:700px){.grid,.grid3{grid-template-columns:1fr}.top{display:block}.top .pill{margin-top:8px}}
+</style>
+</head>
+<body>
+<main>
+<div class="top">
+  <div>
+    <span class="badge">AI MV STORYBOARD STUDIO · v1.0</span>
+    <h1>《貓掌江湖／喵台灣》Storyboard 工作台</h1>
+    <p>把角色設定、首幀、分鏡、運鏡、角色一致性與各影片模型提示詞整理成可直接製作的 9:16 專案。</p>
+    <div class="nav">
+      <a class="pill" href="./">← AI 音樂生成工作室</a>
+      <a class="pill" href="https://github.com/gogototo24-lang/ai-music-studio">GitHub</a>
+    </div>
+  </div>
+  <span id="backendBadge" class="pill">後端未檢查</span>
+</div>
+
+<section class="card">
+<h2>1. 專案設定</h2>
+<div class="grid">
+  <div><label>宇宙</label><select id="universe">
+    <option value="maozhang">貓掌江湖</option>
+    <option value="miaotaiwan">喵台灣</option>
+    <option value="general">一般 AI MV</option>
+  </select></div>
+  <div><label>角色</label><select id="character">
+    <option value="white-emperor">白帝喵尊</option>
+    <option value="moonfan">月扇影喵</option>
+    <option value="suili">歲璃喵</option>
+    <option value="white-crazy">白狂天喵</option>
+    <option value="fire">焚天赤焰喵</option>
+    <option value="liuli">琉璃喵</option>
+    <option value="custom">自訂角色</option>
+  </select></div>
+  <div><label>影片模型</label><select id="provider">
+    <option value="pixverse">PixVerse</option>
+    <option value="seedance">Higgsfield / Seedance</option>
+    <option value="flow">Flow</option>
+    <option value="generic">通用提示詞</option>
+  </select></div>
+  <div><label>總長度</label><select id="duration">
+    <option value="10">10 秒</option>
+    <option value="15" selected>15 秒</option>
+    <option value="30">30 秒</option>
+  </select></div>
+  <div><label>畫面比例</label><select id="ratio"><option selected>9:16</option><option>16:9</option></select></div>
+  <div><label>鏡頭數</label><select id="shotCount"><option value="2">2 鏡</option><option value="3" selected>3 鏡</option><option value="4">4 鏡</option></select></div>
+</div>
+<label>標題</label><input id="title" value="白帝喵尊・天外一念">
+<label>核心劇情／想看到的畫面</label><textarea id="brief">白帝喵尊立於天外雲峰雲海之上，先以空手指訣凝聚雲氣，再展開金白色掌印屏障，最後萬象歸於寂靜，留下皇者般的收勢。</textarea>
+<label>自訂角色設定（選「自訂角色」時使用）</label><textarea id="customLock" placeholder="例如：黑色長毛母喵、金瞳、黑銀長袍、固定黑色折扇；所有鏡頭保持相同臉型、服裝、道具與色彩。"></textarea>
+<div class="row">
+  <button class="primary" id="generateBtn">🎬 生成 Storyboard</button>
+  <button class="secondary" id="copyAllBtn">複製全部提示詞</button>
+  <button class="ghost" id="exportBtn">匯出 JSON</button>
+</div>
+</section>
+
+<section class="card">
+<h2>2. AI Music Studio v2 後端</h2>
+<label>後端網址</label>
+<input id="apiBase" value="https://ai-music-studio-v2.onrender.com">
+<div class="row"><button class="secondary" id="healthBtn">檢查 /health</button></div>
+<div id="backendStatus" class="status">Storyboard 可完全離線產生；後端連線用於後續口白、BGM、混音與 MV 合成。</div>
+</section>
+
+<section class="card">
+<h2>3. 角色一致性鎖定</h2>
+<div id="continuity" class="lock">尚未生成。</div>
+</section>
+
+<section class="card">
+<h2>4. 首幀與分鏡</h2>
+<div id="shots"><p class="muted">按「生成 Storyboard」後會建立每一鏡的首幀與影片提示詞。</p></div>
+</section>
+
+<section class="card">
+<h2>5. 專案資料</h2>
+<pre id="projectJson">尚未生成。</pre>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const canon={
+  "white-emperor":{
+    name:"白帝喵尊",
+    lock:"成年雪白長毛母喵；雙眼湛藍；白銀雲紋長袍；淡金肩飾；天外雲峰峰主；無實體武器；只以空手掌印與指訣施展力量；所有鏡頭維持相同臉型、毛色、服裝與飾件。",
+    action:"雲氣、掌印、指訣、金白色防護能量與寂靜收勢",
+    avoid:"不得生成刀劍或其他實體武器；不得改變眼睛顏色、毛色、服裝、肩飾；不得出現多餘肢體或角色複製"
+  },
+  moonfan:{
+    name:"月扇影喵",
+    lock:"黑色系成年母喵；固定黑色折扇；電影級布袋戲武俠服裝；所有鏡頭保持相同臉型、服裝、黑折扇外觀與色彩。",
+    action:"黑色折扇開合、月色、扇影與低調能量效果",
+    avoid:"黑色折扇不得變成刀、劍、弓或其他道具；不得改變角色臉型與服裝"
+  },
+  suili:{
+    name:"歲璃喵",
+    lock:"成年母喵；固定古老刀鞘作為角色識別道具；金色時間波紋；所有鏡頭維持相同臉型、服裝與刀鞘。",
+    action:"時間凝滯、雨滴停住、刀鞘輕觸地面、金色時間波紋擴散",
+    avoid:"刀鞘不得變成刀；不得改變角色服裝、臉型或時間能量色彩"
+  },
+  "white-crazy":{
+    name:"白狂天喵",
+    lock:"白色系成年母喵；固定既有武俠服裝與角色識別道具；所有鏡頭維持相同臉型、服裝、輪廓與色彩。",
+    action:"雪地疾行、氣勢壓迫、刀光只作幻想視覺特效呈現",
+    avoid:"不得改變角色臉型、毛色、服裝或既有道具外觀；避免現實武器操作細節"
+  },
+  fire:{
+    name:"焚天赤焰喵",
+    lock:"火系成年母喵；赤紅火焰主色；固定既有服裝與角色外觀；所有鏡頭保持相同臉型、服裝與火焰色彩。",
+    action:"火焰能量、火龍意象、熱浪與電影級光影",
+    avoid:"不得改變角色身份、服裝與火焰主色；避免寫實傷害畫面"
+  },
+  liuli:{
+    name:"琉璃喵",
+    lock:"成年母喵；琉璃與月光質感；固定既有角色臉型、服裝與色彩；畫面保持優雅、電影感與角色一致性。",
+    action:"琉璃月光、星光碎影、柔和能量與優雅運鏡",
+    avoid:"不得改變角色臉型、服裝或主色；避免多餘肢體與不必要文字"
+  }
+};
+
+const universeRules={
+  maozhang:{
+    style:"9:16 電影級台灣布袋戲靈感的母喵武俠奇幻世界；戲劇燈光、雲霧、衣料動態、精緻偶戲感；非血腥幻想武戲。",
+    avoid:"現代物件、角色變成人類、血腥畫面、角色漂移、服裝突變、道具變形、字幕亂碼"
+  },
+  miaotaiwan:{
+    style:"9:16 台灣城市與社群短片風格；清楚主體、生活感、在地場景、乾淨構圖；公共議題只呈現已核實且中立的資訊。",
+    avoid:"捏造新聞、誤導性政治訊息、角色臉型漂移、文字亂碼、背景嚴重變形"
+  },
+  general:{
+    style:"cinematic short-form video, coherent visual storytelling, consistent subject identity, clean composition",
+    avoid:"identity drift, flicker, duplicated subject, deformed limbs, random text"
+  }
+};
+
+function splitDuration(total,count){
+  const base=Math.floor(total/count), rem=total%count;
+  return Array.from({length:count},(_,i)=>base+(i<rem?1:0));
+}
+
+function getCharacter(){
+  const key=$("character").value;
+  if(key==="custom"){
+    return {
+      name:"自訂角色",
+      lock:$("customLock").value.trim()||"保持同一角色臉型、服裝、色彩與識別道具。",
+      action:"依核心劇情進行電影化動作",
+      avoid:"不得無故改變角色外觀、服裝、道具或物種"
+    };
+  }
+  return canon[key];
+}
+
+function providerText(provider){
+  if(provider==="pixverse") return "PixVerse：單一主要動作＋單一主要運鏡，強調首幀角色一致性與清楚動作節奏。";
+  if(provider==="seedance") return "Seedance：使用核准首幀做 image-to-video；保持參考角色、服裝與構圖連續；動作自然，鏡頭節奏清楚。";
+  if(provider==="flow") return "Flow：以電影鏡頭語言描述主體、場景、動作、運鏡、光線與時間節點；避免一鏡塞入太多事件。";
+  return "通用：保持角色一致性、單鏡單一主要動作、明確鏡頭運動與節奏。";
+}
+
+function beatFor(i,count,brief,char){
+  if(count===2) return i===0
+    ? {name:"建立氣勢",action:"角色在環境中登場並建立核心能量／情緒，鏡頭由中遠景穩定推近。"}
+    : {name:"高潮收勢",action:"核心視覺效果達到高潮後迅速收束，角色以穩定姿態完成結尾。"};
+  if(i===0) return {name:"登場",action:"以環境與角色定場，角色做一個清楚、克制的起手動作，鏡頭緩慢推近。"};
+  if(i===count-1) return {name:"高潮／收勢",action:"將核心效果推到最高點後乾淨收束，保留角色清楚輪廓與最後一個英雄式構圖。"};
+  return {name:"核心發展",action:"角色完成主要能力或情緒轉折，鏡頭做一次清楚的側移或半環繞，效果逐步加強。"};
+}
+
+function buildFirstFrame(project,shot,char,rules){
+  return [
+    "FIRST FRAME",
+    "Universe: "+project.universeLabel,
+    "Character: "+char.name,
+    "Format: "+project.ratio+" vertical short film",
+    "Scene beat: "+shot.name,
+    "Story context: "+project.brief,
+    "Character lock: "+char.lock,
+    "Visual style: "+rules.style,
+    "Composition: "+(shot.index===1?"cinematic establishing portrait, full readable silhouette":"cinematic medium shot, readable face and costume"),
+    "Lighting: dramatic but clean subject separation, cinematic atmospheric depth",
+    "Constraints: "+char.avoid+"；"+rules.avoid,
+    "No on-screen text."
+  ].join("\n");
+}
+
+function buildVideoPrompt(project,shot,char,rules){
+  return [
+    "VIDEO SHOT "+shot.index+" / "+project.shotCount,
+    "Duration: "+shot.duration+" seconds",
+    "Provider guidance: "+providerText(project.provider),
+    "Character: "+char.name,
+    "Continuity lock: "+char.lock,
+    "Story: "+project.brief,
+    "Beat: "+shot.name,
+    "Action: "+shot.action,
+    "Character-specific visual action: "+char.action,
+    "Camera: "+(shot.index===1?"slow cinematic push-in":shot.index===project.shotCount?"controlled pull-back or locked heroic finish":"smooth lateral move or gentle half-orbit"),
+    "Lighting/style: "+rules.style,
+    "Timing: first 20% establish pose; middle 60% perform one primary visual action; final 20% stabilize for continuity into the next shot.",
+    "Avoid: "+char.avoid+"；"+rules.avoid,
+    "Keep the action fictional, non-graphic and suitable for general audiences."
+  ].join("\n");
+}
+
+function generate(){
+  const char=getCharacter(), rules=universeRules[$("universe").value];
+  const total=Number($("duration").value), count=Number($("shotCount").value);
+  const durations=splitDuration(total,count);
+  const universeLabel=$("universe").selectedOptions[0].textContent;
+  const project={
+    version:"1.0",
+    generatedAt:new Date().toISOString(),
+    universe:$("universe").value,
+    universeLabel,
+    character:$("character").value,
+    characterName:char.name,
+    provider:$("provider").value,
+    providerLabel:$("provider").selectedOptions[0].textContent,
+    title:$("title").value.trim()||char.name+" Storyboard",
+    brief:$("brief").value.trim()||"角色電影級登場短片",
+    ratio:$("ratio").value,
+    totalDuration:total,
+    shotCount:count,
+    continuityLock:char.lock,
+    avoid:[char.avoid,rules.avoid],
+    shots:[]
+  };
+  project.shots=durations.map((duration,i)=>{
+    const beat=beatFor(i,count,project.brief,char);
+    const shot={index:i+1,duration,name:beat.name,action:beat.action};
+    shot.firstFramePrompt=buildFirstFrame(project,shot,char,rules);
+    shot.videoPrompt=buildVideoPrompt(project,shot,char,rules);
+    return shot;
+  });
+  window.currentProject=project;
+  render(project);
+  localStorage.setItem("aiMvStoryboardLast",JSON.stringify(project));
+}
+
+function render(project){
+  $("continuity").innerHTML="<strong>"+esc(project.characterName)+"</strong><br>"+esc(project.continuityLock)+"<br><br><strong>避免：</strong>"+esc(project.avoid.join("；"));
+  $("shots").innerHTML=project.shots.map(s=>`
+    <article class="shot">
+      <div class="shothead"><strong>Shot ${s.index}｜${esc(s.name)}</strong><span class="pill">${s.duration}s</span></div>
+      <p class="muted">${esc(s.action)}</p>
+      <label>首幀提示詞</label><pre id="ff-${s.index}">${esc(s.firstFramePrompt)}</pre>
+      <div class="row"><button class="ghost" onclick="copyText('ff-${s.index}')">複製首幀</button></div>
+      <label>影片提示詞</label><pre id="vp-${s.index}">${esc(s.videoPrompt)}</pre>
+      <div class="row"><button class="secondary" onclick="copyText('vp-${s.index}')">複製影片提示詞</button></div>
+    </article>`).join("");
+  $("projectJson").textContent=JSON.stringify(project,null,2);
+}
+
+async function copyText(id){
+  const text=$(id).textContent;
+  try{await navigator.clipboard.writeText(text);alert("已複製")}catch{alert("請長按文字手動複製")}
+}
+
+async function copyAll(){
+  if(!window.currentProject) generate();
+  const p=window.currentProject;
+  const text=p.shots.map(s=>`=== SHOT ${s.index} / ${s.duration}s ===\n\n${s.firstFramePrompt}\n\n${s.videoPrompt}`).join("\n\n----------------\n\n");
+  try{await navigator.clipboard.writeText(text);alert("全部提示詞已複製")}catch{alert("請使用匯出 JSON")}
+}
+
+function exportJson(){
+  if(!window.currentProject) generate();
+  const p=window.currentProject;
+  const blob=new Blob([JSON.stringify(p,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=(p.title||"storyboard").replace(/[\\/:*?"<>|]+/g,"-")+".json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+
+async function health(){
+  const base=$("apiBase").value.trim().replace(/\/+$/,"");
+  $("backendStatus").textContent="檢查中…";
+  try{
+    const r=await fetch(base+"/health",{cache:"no-store"});
+    if(!r.ok) throw Error("HTTP "+r.status);
+    const j=await r.json();
+    $("backendStatus").textContent="後端正常："+(j.service||"AI Music Studio v2")+" / "+(j.version||"version unknown")+"；FFmpeg："+String(j.ffmpeg);
+    $("backendStatus").className="status ok";
+    $("backendBadge").textContent="後端已連線";$("backendBadge").className="pill ok";
+  }catch(e){
+    $("backendStatus").textContent="後端目前無法連線："+e.message+"。Storyboard 仍可正常使用。";
+    $("backendStatus").className="status err";
+    $("backendBadge").textContent="後端離線";
+  }
+}
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+$("generateBtn").addEventListener("click",generate);
+$("copyAllBtn").addEventListener("click",copyAll);
+$("exportBtn").addEventListener("click",exportJson);
+$("healthBtn").addEventListener("click",health);
+$("character").addEventListener("change",()=>{$("customLock").disabled=$("character").value!=="custom"});
+
+try{
+  const last=JSON.parse(localStorage.getItem("aiMvStoryboardLast")||"null");
+  if(last && last.shots){window.currentProject=last;render(last)}
+}catch{}
+$("customLock").disabled=true;
+</script>
+</body>
+</html>
