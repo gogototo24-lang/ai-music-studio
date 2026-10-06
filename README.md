@@ -27,3 +27,19 @@
 
 ## 安全
 API 金鑰、Threads token、Higgsfield／PixVerse／OpenAI 憑證都只能放在伺服器端環境變數或 Secret，不能寫進 `index.html`、`app.js` 或任何公開 repository。
+
+
+## Storyboard 工作台
+
+公開入口：`storyboard.html`
+
+功能：
+- 《貓掌江湖》／《喵台灣》模式
+- PixVerse／Higgsfield Seedance／Flow 提示詞
+- 角色一致性鎖定
+- 首幀提示詞
+- 多鏡頭 Storyboard
+- JSON 專案匯出
+- AI Music Studio v2 `/health` 連線檢查
+
+技術說明：`docs/STORYBOARD_STUDIO.md`
