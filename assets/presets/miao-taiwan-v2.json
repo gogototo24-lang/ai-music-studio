@@ -1,0 +1,25 @@
+{
+  "presetId": "miao-taiwan-v2",
+  "name": "《喵台灣》社群短片模式",
+  "aspectRatio": "9:16",
+  "characterConsistency": true,
+  "visualStyle": {
+    "tone": "Taiwan social short-form cinematic visual",
+    "lighting": "clean daylight, dusk or urban practical light depending on topic",
+    "camera": "clear subject-first composition",
+    "color": "warm, readable, platform-friendly"
+  },
+  "rules": [
+    "verify current facts before public-affairs content",
+    "keep public-affairs wording neutral and factual",
+    "avoid invented quotes or events",
+    "one visual joke or narrative beat per shot"
+  ],
+  "avoid": [
+    "misleading claims",
+    "identity drift",
+    "unreadable text",
+    "distorted anatomy",
+    "cluttered composition"
+  ]
+}
