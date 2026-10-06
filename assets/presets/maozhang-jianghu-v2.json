@@ -1,0 +1,27 @@
+{
+  "presetId": "maozhang-jianghu-v2",
+  "name": "《貓掌江湖》正式製作模式",
+  "aspectRatio": "9:16",
+  "allCharactersFemaleCats": true,
+  "characterConsistency": true,
+  "visualStyle": {
+    "tone": "cinematic Taiwanese glove-puppetry-inspired feline fantasy",
+    "lighting": "dramatic moonlight, cloud haze, controlled energy glow",
+    "camera": "one main camera move per shot",
+    "color": "character-specific canon palette"
+  },
+  "rules": [
+    "preserve face, fur, costume, props and silhouette across shots",
+    "one primary action per shot",
+    "non-graphic fantasy action only",
+    "use approved first frame before image-to-video when possible"
+  ],
+  "avoid": [
+    "identity drift",
+    "prop mutation",
+    "duplicate limbs",
+    "random text",
+    "modern objects unless story requires them",
+    "graphic injury"
+  ]
+}
