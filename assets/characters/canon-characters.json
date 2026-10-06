@@ -1,0 +1,49 @@
+{
+  "version": "2026-10-06",
+  "note": "Only confirmed continuity locks are stored here. Unknown weapon/prop details are intentionally omitted.",
+  "characters": [
+    {
+      "id": "white-emperor",
+      "name": "白帝喵尊",
+      "gender": "female",
+      "species": "cat",
+      "lock": [
+        "snow-white long fur",
+        "blue eyes",
+        "white-silver cloud-pattern robe",
+        "pale-gold shoulder ornaments",
+        "no physical weapon",
+        "palm seals and hand signs"
+      ],
+      "universe": "貓掌江湖"
+    },
+    {
+      "id": "moonfan",
+      "name": "月扇影喵",
+      "gender": "female",
+      "species": "cat",
+      "lock": [
+        "black-toned female cat",
+        "fixed black folding fan",
+        "same face",
+        "same costume",
+        "same fan across shots"
+      ],
+      "universe": "貓掌江湖"
+    },
+    {
+      "id": "suili",
+      "name": "歲璃喵",
+      "gender": "female",
+      "species": "cat",
+      "lock": [
+        "fixed ancient sheath",
+        "golden time ripple",
+        "same face",
+        "same costume",
+        "sheath must not turn into a blade"
+      ],
+      "universe": "貓掌江湖"
+    }
+  ]
+}
