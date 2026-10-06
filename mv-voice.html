@@ -29,7 +29,7 @@ small{color:#8e9ab0}
 </head>
 <body>
 <main>
-<span class="badge">MV + VOICE STUDIO · v2.1</span>
+<span class="badge">MV + VOICE STUDIO · v2.2</span>
 <h1>貓掌 MV＋聲線工作台</h1>
 <p>先試角色口白，再把圖片／影片與完成音訊合成 9:16 MV。多個素材會依選取順序播放。</p>
 <div class="row">
@@ -58,6 +58,32 @@ small{color:#8e9ab0}
 <option value="miaotaiwan">喵台灣</option>
 <option value="custom">自訂</option>
 </select>
+<label>聲線引擎</label>
+<select id="voiceProvider" onchange="providerHint()">
+<option value="auto">自動選擇</option>
+<option value="edge">Edge TTS｜快速預覽</option>
+<option value="pilottts">PilotTTS｜台語 zh-minnan 測試</option>
+<option value="cosyvoice">CosyVoice 3｜角色音色／情緒</option>
+<option value="gpt-sovits">GPT-SoVITS｜固定角色聲紋</option>
+</select>
+<div id="providerHint" class="status">自動模式會優先使用已設定的主 provider；沒有設定時安全回到 Edge。</div>
+<div id="providerStatus" class="status">聲線 provider 狀態尚未讀取。</div>
+
+<label>語言</label>
+<select id="voiceLanguage">
+<option value="zh-TW">台灣中文</option>
+<option value="zh-minnan">台語／閩南語（實驗）</option>
+</select>
+
+<label>情緒</label>
+<select id="voiceEmotion">
+<option value="neutral">中性</option>
+<option value="serious">嚴肅</option>
+<option value="happy">明亮</option>
+<option value="sad">低沉</option>
+<option value="angry">強烈</option>
+</select>
+
 <label>聲線</label>
 <select id="voicePreset" onchange="voiceHint()">
 <option value="empress">皇者威儀</option>
@@ -72,10 +98,13 @@ small{color:#8e9ab0}
 <div id="voiceHint" class="status"></div>
 <label>試聽文字</label>
 <textarea id="voiceText">雲巔無聲，唯吾一念，萬象歸寂。</textarea>
+<label>角色參考聲線 ID（可空白）</label>
+<input id="referenceId" placeholder="例如 white-emperor；只使用你有權使用的原創／授權聲音">
+<small>CosyVoice／PilotTTS 需要部署對應 provider 並準備合法參考聲音；未設定時不會影響 Edge。</small>
 <label><input id="reverb" type="checkbox" checked style="width:auto"> 加入殿堂／電影感殘響</label>
 <button class="primary" onclick="makeVoice()">🔊 生成並試聽</button>
 <div id="voiceOut"></div>
-<p class="muted">目前內建是台灣中文 spoken TTS 聲線，不是原生台語歌唱模型；台語聲線可再接獨立 provider。</p>
+<p class="muted">Edge 是台灣中文 spoken TTS fallback。台語優先測 PilotTTS zh-minnan 與 CosyVoice；只使用你有權使用的原創或授權聲音。</p>
 </section>
 
 <section class="card">
@@ -112,11 +141,19 @@ const characterVoice={
 "white-emperor":"empress",moonfan:"heroine",suili:"ethereal",
 "white-crazy":"overlord",fire:"overlord",liuli:"gentle",miaotaiwan:"youth"
 };
+const providerHints={
+auto:"自動模式：使用後端指定的主 provider；未設定時回到 Edge。",
+edge:"Edge：最快、最穩，適合台灣中文預覽與 fallback。",
+pilottts:"PilotTTS：優先測 zh-minnan 台語自然度與情緒。",
+cosyvoice:"CosyVoice 3：適合角色音色、情緒與跨語言／方言測試。",
+"gpt-sovits":"GPT-SoVITS：適合建立固定角色聲紋；目前不當台語主力。"
+};
 
 function apiBase(){return $("apiBase").value.trim().replace(/\/+$/,"")}
 function api(path){return path.startsWith("http")?path:apiBase()+path}
 function saveApi(){localStorage.setItem("aiMusicV2Api",apiBase());alert("已儲存")}
 function voiceHint(){$("voiceHint").textContent=hints[$("voicePreset").value]||""}
+function providerHint(){$("providerHint").textContent=providerHints[$("voiceProvider").value]||""}
 function applyCharacterVoice(){const p=characterVoice[$("character").value];if(p)$("voicePreset").value=p;voiceHint()}
 
 async function jsonFetch(path,opt={}){
@@ -132,22 +169,43 @@ async function health(){
     const j=await jsonFetch("/health");
     $("healthStatus").className="status ok";
     $("healthStatus").textContent=`連線成功｜${j.service||"AI Music Studio v2"} ${j.version||""}｜FFmpeg: ${j.ffmpeg}`;
+    if(Array.isArray(j.voice_providers)) renderProviderStatus(j.voice_providers);
   }catch(e){
     $("healthStatus").className="status err";
     $("healthStatus").textContent="後端無法連線："+e.message+"。可確認 Render 是否已部署或修改 API 網址。";
   }
 }
 
+function renderProviderStatus(list){
+  $("providerStatus").className="status";
+  $("providerStatus").innerHTML=list.map(p=>`${p.configured?"✅":"⚪"} ${p.name}${p.primary?"（主）":""}`).join("<br>");
+}
+async function loadProviders(){
+  try{
+    const j=await jsonFetch("/api/voice/providers");
+    if(Array.isArray(j.providers)) renderProviderStatus(j.providers);
+  }catch(e){
+    $("providerStatus").textContent="Provider 狀態暫時無法讀取："+e.message;
+  }
+}
 async function makeVoice(){
   const text=$("voiceText").value.trim();if(!text)return alert("請輸入口白");
   $("voiceOut").innerHTML='<div class="status">聲線生成中…</div>';
   try{
     const j=await jsonFetch("/api/voice/generate",{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({text,preset:$("voicePreset").value,enable_reverb:$("reverb").checked})
+      body:JSON.stringify({
+        text,
+        preset:$("voicePreset").value,
+        provider:$("voiceProvider").value,
+        language:$("voiceLanguage").value,
+        emotion:$("voiceEmotion").value,
+        reference_id:$("referenceId").value.trim(),
+        enable_reverb:$("reverb").checked
+      })
     });
     const u=api(j.audio_url);
-    $("voiceOut").innerHTML=`<div class="status ok">${j.preset_name||"聲線完成"}</div><audio controls src="${u}"></audio><p><a href="${u}" target="_blank" style="color:#c7d2fe">開啟音檔</a></p>`;
+    $("voiceOut").innerHTML=`<div class="status ok">${j.preset_name||"聲線完成"}｜${j.provider_name||j.provider||""}｜${j.language||""}</div><audio controls src="${u}"></audio><p><a href="${u}" target="_blank" style="color:#c7d2fe">開啟音檔</a></p>`;
   }catch(e){$("voiceOut").innerHTML=`<div class="status err">${e.message}</div>`}
 }
 
@@ -187,6 +245,8 @@ async function renderMv(){
 
 const saved=localStorage.getItem("aiMusicV2Api");if(saved)$("apiBase").value=saved;
 applyCharacterVoice();
+providerHint();
+loadProviders();
 </script>
 </body>
 </html>
