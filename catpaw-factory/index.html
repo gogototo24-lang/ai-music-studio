@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CatPaw AI Factory v0.2</title>
+<title>CatPaw AI Factory v0.3</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0b0f19;color:#eef2ff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
 main{max-width:1000px;margin:auto;padding:20px 14px 70px}
@@ -16,10 +16,27 @@ button,a.btn{display:inline-block;border:0;border-radius:10px;padding:11px 13px;
 @media(max-width:720px){.grid{grid-template-columns:1fr}}
 </style></head>
 <body><main>
-<span class="badge">CatPaw AI Factory · P1 MOCK</span>
-<h1>四產線總控 v0.2</h1>
+<span class="badge">CatPaw AI Factory · P2 LOCKED</span>
+<h1>四產線總控 v0.3</h1>
 <p>所有產線目前只跑 Mock。付費 provider = OFF，自動發布 = OFF，實際成本 = NT$0。</p>
 <div class="card"><strong>安全閘門：</strong> paid_enabled=false ｜ publish=pending ｜ 真實 RunningHub / PixVerse / OpenAI / Music provider 不會被呼叫。</div>
+<section class="card">
+<h2>P2｜A 產線 RunningHub 單筆真實測片</h2>
+<p>目前規則：只允許 A 產線、RunningHub、5 秒、一次 1 筆、完成後停在人工審核；自動發布永遠關閉。</p>
+<button onclick="checkP2()">檢查 P2 解鎖狀態</button>
+<div id="p2Status" class="status">尚未檢查。</div>
+<label style="display:block;margin-top:12px">首幀 HTTPS URL</label>
+<input id="p2Frame" placeholder="https://..." style="width:100%;padding:10px;border-radius:10px;border:1px solid #303a52;background:#0d1320;color:#fff">
+<label style="display:block;margin-top:12px">影片提示詞</label>
+<textarea id="p2Prompt" style="width:100%;min-height:110px;padding:10px;border-radius:10px;border:1px solid #303a52;background:#0d1320;color:#fff">9:16 cinematic female cat wuxia, approved first frame, one clear action, one clear camera move, consistent face, costume and prop, non-graphic fantasy action.</textarea>
+<label style="display:block;margin-top:12px">單筆預算上限（NT$）</label>
+<input id="p2Budget" type="number" min="1" max="15" value="5" style="width:100%;padding:10px;border-radius:10px;border:1px solid #303a52;background:#0d1320;color:#fff">
+<div>
+<button class="secondary" onclick="buildP2Payload()">建立單筆測試 Payload</button>
+<button class="secondary" onclick="copyP2Payload()">複製 Payload</button>
+</div>
+<pre id="p2Payload">尚未建立。這裡只準備資料，不會送出付費任務。</pre>
+</section>
 <div id="pipelines" class="grid"></div>
 <section class="card">
 <h2>四線整體驗收</h2>
@@ -58,5 +75,53 @@ function renderHistory(){
  $("history").innerHTML=jobs.length?jobs.slice(0,12).map(j=>`<div class="status"><b>${j.pipeline_id}</b>｜${j.job_id}<br>狀態：${j.status}｜Mock：是｜成本 NT$${j.budget.actual}｜發布 ${j.approval.publish}</div>`).join(""):"<p>尚無紀錄。</p>";
 }
 function clearHistory(){CATPAW_FACTORY.clear();renderHistory();$("summary").textContent="本機 Mock 紀錄已清除。"}
-buildCards();renderHistory();
+
+const P2_STATUS_URL="https://threads-scheduler.gogototo24.workers.dev/api/factory/p2/status";
+async function checkP2(){
+  $("p2Status").textContent="檢查中…";
+  try{
+    const r=await fetch(P2_STATUS_URL,{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const checks=j.checks||{};
+    const rows=[
+      ["RunningHub API Key",checks.runninghub_api_key],
+      ["WebApp ID",checks.runninghub_webapp_id],
+      ["Node mapping",checks.runninghub_node_mapping],
+      ["Live switch",checks.live_switch],
+      ["發布鎖定",checks.publish_lock]
+    ];
+    $("p2Status").innerHTML=
+      rows.map(([n,v])=>`${v?"✅":"⚪"} ${n}`).join("\n")+
+      `\n\n狀態：${j.can_submit?"可提交單筆真實測片":"仍鎖定"}\n上限：NT${j.max_budget_twd}｜片長：${j.duration_seconds}s`+
+      (j.missing?.length?`\n缺少：${j.missing.join("、")}`:"");
+  }catch(e){
+    $("p2Status").textContent="暫時無法讀取 Worker P2 狀態："+e.message+"\n目前仍視為鎖定，不會送出付費任務。";
+  }
+}
+function buildP2Payload(){
+  const frame=$("p2Frame").value.trim();
+  const prompt=$("p2Prompt").value.trim();
+  const budget=Number($("p2Budget").value||0);
+  const payload={
+    pipeline_id:"A",
+    provider:"runninghub",
+    universe:"貓掌江湖",
+    title:"CatPaw P2 單筆 5 秒測片",
+    first_frame_url:frame,
+    prompt,
+    budget_max_twd:budget,
+    publish:false,
+    approval:"APPROVE_SINGLE_PAID_TEST",
+    idempotency_key:"catpaw-p2-"+new Date().toISOString().slice(0,10)+"-"+Math.random().toString(36).slice(2,8)
+  };
+  $("p2Payload").textContent=JSON.stringify(payload,null,2);
+  return payload;
+}
+async function copyP2Payload(){
+  const t=$("p2Payload").textContent;
+  if(t.startsWith("尚未")) buildP2Payload();
+  try{await navigator.clipboard.writeText($("p2Payload").textContent);alert("P2 Payload 已複製")}catch{alert("請長按 JSON 手動複製")}
+}
+buildCards();renderHistory();checkP2();
 </script></body></html>
