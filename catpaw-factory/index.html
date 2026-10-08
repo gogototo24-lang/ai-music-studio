@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CatPaw AI Factory v0.2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0f19;color:#eef2ff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+main{max-width:1000px;margin:auto;padding:20px 14px 70px}
+h1{font-size:clamp(30px,7vw,52px);margin:8px 0;color:#ffd36a}h2{margin:0 0 12px}
+p{color:#aeb9cf;line-height:1.65}.badge{display:inline-block;border:1px solid #3a4661;border-radius:999px;padding:6px 10px;color:#c7d2fe;background:#111827}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{background:#141a28;border:1px solid #303a52;border-radius:18px;padding:16px;margin-top:14px}
+.pipeline{min-height:220px}.status{padding:10px;border-radius:10px;background:#0d1320;border:1px solid #303a52;margin-top:10px;white-space:pre-wrap;line-height:1.55}
+button,a.btn{display:inline-block;border:0;border-radius:10px;padding:11px 13px;background:#f8fafc;color:#111827;font-weight:800;text-decoration:none;cursor:pointer;margin:6px 4px 0 0}
+.secondary{background:#28334a!important;color:#fff!important}.ok{color:#9ef0b9}.warn{color:#ffd889}pre{white-space:pre-wrap;word-break:break-word;background:#080c13;border-radius:10px;padding:12px;max-height:430px;overflow:auto}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<span class="badge">CatPaw AI Factory · P1 MOCK</span>
+<h1>四產線總控 v0.2</h1>
+<p>所有產線目前只跑 Mock。付費 provider = OFF，自動發布 = OFF，實際成本 = NT$0。</p>
+<div class="card"><strong>安全閘門：</strong> paid_enabled=false ｜ publish=pending ｜ 真實 RunningHub / PixVerse / OpenAI / Music provider 不會被呼叫。</div>
+<div id="pipelines" class="grid"></div>
+<section class="card">
+<h2>四線整體驗收</h2>
+<button onclick="runAll()">▶ A/B/C/D 各跑 1 筆 Mock</button>
+<button class="secondary" onclick="renderHistory()">重新整理</button>
+<button class="secondary" onclick="clearHistory()">清除本機 Mock 紀錄</button>
+<div id="summary" class="status">尚未執行。</div>
+</section>
+<section class="card"><h2>最近任務</h2><div id="history"></div></section>
+<section class="card"><h2>目前任務 JSON</h2><pre id="jsonOut">尚未執行。</pre></section>
+<p><a class="btn secondary" href="../">← 回 AI 音樂生成工作室</a></p>
+</main>
+<script src="factory/mock-runner.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+function buildCards(){
+ $("pipelines").innerHTML=Object.entries(CATPAW_FACTORY.pipelines).map(([id,p])=>`
+ <article class="card pipeline"><span class="badge">產線 ${id}</span><h2>${p.name}</h2><p>${p.description}</p>
+ <div id="st-${id}" class="status">待執行</div><button onclick="runOne('${id}')">跑 ${id} Mock</button></article>`).join("");
+}
+function show(id,job){
+ const done=job.steps.filter(x=>x.status==="completed").length;
+ const total=job.steps.length;
+ $("st-"+id).innerHTML=`Job：${job.job_id}\n狀態：${job.status}\n步驟：${done}/${total}\n成本：NT$${job.budget.actual}\n付費：${job.budget.paid_enabled?"ON":"OFF"}\n發布：${job.approval.publish}`;
+ $("jsonOut").textContent=JSON.stringify(job,null,2);
+}
+async function runOne(id){return CATPAW_FACTORY.run(id,j=>show(id,j)).then(j=>{renderHistory();return j})}
+async function runAll(){
+ const result=[];
+ for(const id of ["A","B","C","D"]) result.push(await runOne(id));
+ const ok=result.filter(x=>x.mock_result?.success).length;
+ $("summary").innerHTML=`<span class="ok">P1 驗收：${ok}/4 Mock 成功</span>\n付費呼叫：${result.reduce((n,x)=>n+x.mock_result.paid_calls,0)}\n發布呼叫：${result.reduce((n,x)=>n+x.mock_result.publish_calls,0)}\n總成本：NT$${result.reduce((n,x)=>n+x.mock_result.actual_cost_twd,0)}\n下一階段：只允許單一 provider 的單筆真實測試，需另外核准。`;
+}
+function renderHistory(){
+ const jobs=CATPAW_FACTORY.list();
+ $("history").innerHTML=jobs.length?jobs.slice(0,12).map(j=>`<div class="status"><b>${j.pipeline_id}</b>｜${j.job_id}<br>狀態：${j.status}｜Mock：是｜成本 NT$${j.budget.actual}｜發布 ${j.approval.publish}</div>`).join(""):"<p>尚無紀錄。</p>";
+}
+function clearHistory(){CATPAW_FACTORY.clear();renderHistory();$("summary").textContent="本機 Mock 紀錄已清除。"}
+buildCards();renderHistory();
+</script></body></html>
