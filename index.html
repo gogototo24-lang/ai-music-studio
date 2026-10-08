@@ -123,17 +123,24 @@ audio{width:100%}
 </section>
 
 <section class="card">
-<h2>5. Cloudflare Worker</h2>
-<label>Worker 網址</label>
-<input id="worker" value="https://snowy-silence-5370.gogototo24.workers.dev">
-<button class="primary" onclick="testWorker()">測試後端</button>
-<div id="workerStatus" class="status">尚未測試 Worker。</div>
+<h2>5. 自家 Music API</h2>
+<label>AI Music Studio v2 API</label>
+<input id="musicApi" value="https://ai-music-studio-v2.onrender.com">
+<label>音樂引擎</label>
+<select id="musicProvider">
+  <option value="auto">自動選擇</option>
+  <option value="yue2">YuE2｜完整歌曲＋歌詞</option>
+  <option value="ace-step">ACE-Step｜快速歌曲候選</option>
+  <option value="musicgen">MusicGen｜BGM</option>
+</select>
+<button class="primary" onclick="testMusicApi()">測試自家 API</button>
+<div id="workerStatus" class="status">尚未測試自家 Music API。</div>
 </section>
 
 <section class="card">
 <h2>6. 生成歌曲</h2>
 <button class="primary" onclick="generateSong()">🎵 生成歌曲</button>
-<div id="genStatus" class="status">目前若沒有音樂 API Key，這一步會顯示尚未設定；前面的免費歌詞與提示詞功能仍可使用。</div>
+<div id="genStatus" class="status">自家 API 不需要 ElevenLabs Key。完整歌曲優先 YuE2；未配置 GPU 歌曲引擎時會退回 MusicGen/BGM。</div>
 </section>
 
 <section id="playerBox" class="card hidden">
@@ -210,23 +217,52 @@ function makePrompt(){
 }
 
 async function copyPrompt(){if(!window.promptText)makePrompt();try{await navigator.clipboard.writeText(window.promptText||"");alert("已複製")}catch{alert("請手動複製")}}
-function workerUrl(){return $("worker").value.trim().replace(/\/+$/,"")}
-async function testWorker(){
+function musicApiUrl(){return $("musicApi").value.trim().replace(/\/+$/,"")}
+async function testMusicApi(){
  $("workerStatus").textContent="測試中…";
- try{const r=await fetch(workerUrl()+"/health");const j=await r.json();if(!j.ok)throw Error("狀態異常");$("workerStatus").textContent="Worker 連線成功。";$("workerStatus").className="status ok";$("workerBadge").textContent="Worker 已連線";$("workerBadge").className="pill ok"}
- catch(e){$("workerStatus").textContent="連線失敗："+e.message;$("workerStatus").className="status err"}
+ try{
+  const r=await fetch(musicApiUrl()+"/health",{cache:"no-store"});
+  const j=await r.json();
+  if(!j.ok)throw Error("狀態異常");
+  const ps=(j.music_providers||[]).map(p=>`${p.configured?"✅":"⚪"} ${p.name}`).join("｜");
+  $("workerStatus").textContent=`自家 Music API 連線成功｜v${j.version||""}\n${ps}`;
+  $("workerStatus").className="status ok";
+  $("workerBadge").textContent="Music API 已連線";$("workerBadge").className="pill ok"
+ } catch(e){
+  $("workerStatus").textContent="連線失敗："+e.message;$("workerStatus").className="status err"
+ }
 }
 async function generateSong(){
  const p=songData();if(!p.lyrics){$("genStatus").textContent="請先生成或輸入歌詞。";return}
- $("genStatus").textContent="正在呼叫 Worker…";
+ $("genStatus").textContent="正在呼叫 CatPaw 自家 Music API…";
  try{
-  const r=await fetch(workerUrl()+"/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
-  if(!r.ok){let m="HTTP "+r.status;try{const j=await r.json();m=j.error||m}catch{}throw Error(m)}
-  const blob=await r.blob();if(!blob.size)throw Error("收到空白音訊");
-  if(window.currentAudioUrl)URL.revokeObjectURL(window.currentAudioUrl);
-  window.currentAudioUrl=URL.createObjectURL(blob);$("player").src=window.currentAudioUrl;$("downloadLink").href=window.currentAudioUrl;$("downloadLink").download=(p.title||"ai-music").replace(/[\\/:*?"<>|]+/g,"-")+".mp3";
-  $("playerBox").classList.remove("hidden");$("genStatus").textContent="歌曲生成完成。";$("genStatus").className="status ok";
- }catch(e){$("genStatus").textContent=String(e.message).includes("ELEVENLABS_API_KEY")?"Worker 正常，但目前尚未設定音樂 API Key。":"生成失敗："+e.message;$("genStatus").className="status err"}
+  const styleText=`${p.style}, ${p.voice}, ${p.mood}, ${p.language}, ${p.tempo}`;
+  const r=await fetch(musicApiUrl()+"/api/music/generate",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      provider:$("musicProvider").value,
+      title:p.title,
+      style:styleText,
+      prompt:p.notes||"",
+      lyrics:p.lyrics,
+      duration:p.duration_seconds,
+      use_fallback:true
+    })
+  });
+  const j=await r.json();
+  if(!r.ok)throw Error(j.detail||j.error||("HTTP "+r.status));
+  const u=musicApiUrl()+j.audio_url;
+  $("player").src=u;$("downloadLink").href=u;
+  $("downloadLink").download=(p.title||"catpaw-music").replace(/[\\/:*?"<>|]+/g,"-")+".wav";
+  $("playerBox").classList.remove("hidden");
+  const mode=j.full_song?"完整歌曲":"BGM/配樂";
+  $("genStatus").textContent=`生成完成｜${j.provider_name||j.engine}｜${mode}\n${j.note||""}`;
+  $("genStatus").className="status ok";
+ }catch(e){
+  $("genStatus").textContent="生成失敗："+e.message;
+  $("genStatus").className="status err"
+ }
 }
 function saveProject(){const p=songData();let h=[];try{h=JSON.parse(localStorage.getItem("musicProjects")||"[]")}catch{}h.unshift(p);h=h.slice(0,8);localStorage.setItem("musicProjects",JSON.stringify(h));renderHistory();alert("已儲存")}
 function renderHistory(){let h=[];try{h=JSON.parse(localStorage.getItem("musicProjects")||"[]")}catch{}if(!h.length){$("history").innerHTML="目前沒有儲存的歌曲。";return}$("history").innerHTML=h.map((x,i)=>`<div class="history-item"><strong>${esc(x.title)}</strong><div class="muted">${esc(x.style)} · ${esc(x.language)} · ${x.duration_seconds||60} 秒</div><div class="row"><button class="secondary" onclick="loadProject(${i})">載入</button></div></div>`).join("")}
