@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatPaw AI 剪輯師 v0.1</title>
+<style>
+body{font-family:system-ui;background:#0d1020;color:#fff;margin:0}
+.wrap{max-width:860px;margin:auto;padding:20px}
+.card{background:#171b32;border:1px solid #30375e;border-radius:18px;padding:18px;margin:14px 0}
+h1{color:#ffd36a}h2{margin-top:0}
+input,select,button{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #454d7a;background:#0f1428;color:#fff;margin:6px 0}
+button{background:#d79b25;color:#111;font-weight:800}
+.secondary{background:#8fd3ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.clip{border:1px solid #454d7a;border-radius:12px;padding:12px;margin:8px 0}
+.clip small{color:#aeb8db}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+video{width:100%;max-height:70vh;border-radius:14px;background:#000}
+.status{white-space:pre-wrap;line-height:1.6;color:#bfe3ff}
+.note{color:#b7c1df;line-height:1.6}
+a{color:#9fdbff}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>✂️ CatPaw AI 剪輯師 <small>v0.1</small></h1>
+<p>四線素材 → 排序 → 裁切 → 轉場 → 9:16 / 16:9 → MP4</p>
+
+<section class="card">
+<h2>1. 匯入影片</h2>
+<input id="files" type="file" accept="video/mp4,video/quicktime,video/webm" multiple>
+<p class="note">一次最多 20 支。選完後可調整順序與每支裁切起訖秒數。</p>
+<div id="clips"></div>
+</section>
+
+<section class="card">
+<h2>2. 成片設定</h2>
+<div class="row">
+<div><label>比例</label><select id="aspect"><option value="9:16">9:16 直式</option><option value="16:9">16:9 橫式</option></select></div>
+<div><label>畫質</label><select id="quality"><option value="720p">720p 快速</option><option value="1080p">1080p 正式</option></select></div>
+</div>
+<label>轉場</label>
+<select id="transition"><option value="cut">硬切｜武戲優先</option><option value="fade">短淡化｜文戲/MV</option></select>
+<button onclick="renderEdit()">開始剪輯</button>
+<div id="status" class="status">等待素材。</div>
+</section>
+
+<section class="card">
+<h2>3. 成片</h2>
+<video id="preview" controls playsinline></video>
+<a id="download" style="display:none" target="_blank">開啟成片</a>
+</section>
+
+<section class="card">
+<h2>v0.1 定位</h2>
+<p class="note">這版先把「剪輯師的手」做出來：順序、裁切、統一比例、統一幀率、音訊補齊、硬切/淡化、一鍵輸出。下一版再加入 AI 自動選鏡、爆點偵測、字幕、BGM、Logo 與 15/30/60 秒爆款模式。</p>
+<p><a href="index.html">← 回 CatPaw AI Studio</a></p>
+</section>
+</main>
+
+<script>
+const API="https://ai-music-studio-v2.onrender.com";
+let items=[];
+
+files.addEventListener("change",()=>{
+  items=[...files.files].map((file,i)=>({file,start:0,end:"",id:Date.now()+i}));
+  draw();
+});
+
+function draw(){
+  clips.innerHTML="";
+  items.forEach((x,i)=>{
+    const d=document.createElement("div"); d.className="clip";
+    d.innerHTML=`
+      <b>${i+1}. ${escapeHtml(x.file.name)}</b><br>
+      <small>${(x.file.size/1024/1024).toFixed(1)} MB</small>
+      <div class="row">
+        <div><label>開始秒</label><input type="number" step="0.1" min="0" value="${x.start}" onchange="setStart(${i},this.value)"></div>
+        <div><label>結束秒（留空=原尾）</label><input type="number" step="0.1" min="0" value="${x.end}" onchange="setEnd(${i},this.value)"></div>
+      </div>
+      <div class="actions">
+        <button class="secondary" onclick="move(${i},-1)">↑ 往前</button>
+        <button class="secondary" onclick="move(${i},1)">↓ 往後</button>
+      </div>`;
+    clips.appendChild(d);
+  });
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+function setStart(i,v){items[i].start=Number(v||0)}
+function setEnd(i,v){items[i].end=v===""?"":Number(v)}
+function move(i,delta){const j=i+delta;if(j<0||j>=items.length)return;[items[i],items[j]]=[items[j],items[i]];draw()}
+
+async function renderEdit(){
+  if(!items.length){status.textContent="請先選影片。";return;}
+  const fd=new FormData();
+  items.forEach(x=>fd.append("clips",x.file,x.file.name));
+  fd.append("aspect",aspect.value);
+  fd.append("quality",quality.value);
+  fd.append("transition",transition.value);
+  fd.append("trim_json",JSON.stringify(items.map(x=>({start:x.start,end:x.end===""?null:x.end}))));
+  status.textContent="剪輯師已開工…";
+  preview.removeAttribute("src"); download.style.display="none";
+  try{
+    const r=await fetch(API+"/api/editor/render",{method:"POST",body:fd});
+    const j=await r.json();
+    if(!r.ok)throw new Error(j.detail||"送出失敗");
+    status.textContent="任務 "+j.job_id+"｜排隊中";
+    poll(j.job_id);
+  }catch(e){status.textContent="失敗："+e.message;}
+}
+async function poll(id){
+  for(let n=0;n<180;n++){
+    await new Promise(r=>setTimeout(r,2000));
+    try{
+      const r=await fetch(API+"/api/editor/jobs/"+encodeURIComponent(id));
+      const j=await r.json();
+      if(!r.ok)throw new Error(j.detail||"查詢失敗");
+      status.textContent="任務 "+id+"｜"+j.status+(j.detail?"\n"+j.detail:"");
+      if(j.status==="success"){
+        const url=new URL(j.video_url,API).href;
+        preview.src=url; download.href=url; download.style.display="inline"; download.textContent="開啟成片";
+        status.textContent+="\n完成｜"+j.meta.width+"×"+j.meta.height+"｜"+j.meta.duration+" 秒｜"+j.meta.clip_count+" 段";
+        return;
+      }
+      if(j.status==="error")return;
+    }catch(e){status.textContent="查詢失敗："+e.message;return;}
+  }
+  status.textContent="任務仍在執行，請稍後重新開啟頁面查看。";
+}
+</script>
+</body>
+</html>
