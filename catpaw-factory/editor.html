@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CatPaw AI 剪輯師 v0.1</title>
+<title>CatPaw AI 剪輯師 v0.2</title>
 <style>
 body{font-family:system-ui;background:#0d1020;color:#fff;margin:0}
 .wrap{max-width:860px;margin:auto;padding:20px}
@@ -24,7 +24,7 @@ a{color:#9fdbff}
 </head>
 <body>
 <main class="wrap">
-<h1>✂️ CatPaw AI 剪輯師 <small>v0.1</small></h1>
+<h1>✂️ CatPaw AI 剪輯師 <small>v0.2</small></h1>
 <p>四線素材 → 排序 → 裁切 → 轉場 → 9:16 / 16:9 → MP4</p>
 
 <section class="card">
@@ -35,7 +35,16 @@ a{color:#9fdbff}
 </section>
 
 <section class="card">
-<h2>2. 成片設定</h2>
+<h2>2. 歌曲與成片設定</h2>
+<label>正式歌曲（可留空，先做視覺版）</label>
+<input id="music" type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/ogg">
+<div class="row">
+<div><label>輸出長度</label><select id="target"><option value="30">30 秒 Preview</option><option value="60">60 秒短版</option><option value="275">4:35 Full MV 骨架</option><option value="0">依素材總長</option></select></div>
+<div><label>原片音效保留</label><select id="sfx"><option value="0">0% 純歌曲</option><option value="0.12">12%</option><option value="0.18" selected>18%</option><option value="0.28">28%</option></select></div>
+</div>
+<label>片頭字卡</label><input id="titleText" value="《一舞封塵》">
+<label>片尾字卡</label><input id="endingText" value="舞魅喵">
+
 <div class="row">
 <div><label>比例</label><select id="aspect"><option value="9:16">9:16 直式</option><option value="16:9">16:9 橫式</option></select></div>
 <div><label>畫質</label><select id="quality"><option value="720p">720p 快速</option><option value="1080p">1080p 正式</option></select></div>
@@ -53,8 +62,8 @@ a{color:#9fdbff}
 </section>
 
 <section class="card">
-<h2>v0.1 定位</h2>
-<p class="note">這版先把「剪輯師的手」做出來：順序、裁切、統一比例、統一幀率、音訊補齊、硬切/淡化、一鍵輸出。下一版再加入 AI 自動選鏡、爆點偵測、字幕、BGM、Logo 與 15/30/60 秒爆款模式。</p>
+<h2>v0.2 定位</h2>
+<p class="note">v0.2 已支援正式歌曲、30/60/275 秒輸出、原片音效混合、片頭片尾字卡，以及素材不足時自動循環填滿 Full MV。下一階段會加 AI 自動選鏡、BPM/副歌偵測與歌詞字幕時間軸。</p>
 <p><a href="index.html">← 回 CatPaw AI Studio</a></p>
 </section>
 </main>
@@ -98,6 +107,12 @@ async function renderEdit(){
   fd.append("aspect",aspect.value);
   fd.append("quality",quality.value);
   fd.append("transition",transition.value);
+  fd.append("target_seconds",target.value);
+  fd.append("original_audio_volume",sfx.value);
+  fd.append("title_text",titleText.value);
+  fd.append("ending_text",endingText.value);
+  fd.append("reuse_mode","cycle");
+  if(music.files && music.files[0]) fd.append("music_file",music.files[0],music.files[0].name);
   fd.append("trim_json",JSON.stringify(items.map(x=>({start:x.start,end:x.end===""?null:x.end}))));
   status.textContent="剪輯師已開工…";
   preview.removeAttribute("src"); download.style.display="none";
@@ -120,7 +135,7 @@ async function poll(id){
       if(j.status==="success"){
         const url=new URL(j.video_url,API).href;
         preview.src=url; download.href=url; download.style.display="inline"; download.textContent="開啟成片";
-        status.textContent+="\n完成｜"+j.meta.width+"×"+j.meta.height+"｜"+j.meta.duration+" 秒｜"+j.meta.clip_count+" 段";
+        status.textContent+="\n完成｜"+j.meta.width+"×"+j.meta.height+"｜"+j.meta.duration+" 秒｜"+j.meta.clip_count+" 段｜歌曲："+(j.meta.music_attached?"已接":"未接")+"｜素材循環："+j.meta.reuse_passes+" 段次";
         return;
       }
       if(j.status==="error")return;
