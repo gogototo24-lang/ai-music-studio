@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CatPaw AI Factory v0.4</title>
+<title>CatPaw AI Factory v0.7</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0b0f19;color:#eef2ff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
 main{max-width:1000px;margin:auto;padding:20px 14px 70px}
@@ -17,8 +17,8 @@ button,a.btn{display:inline-block;border:0;border-radius:10px;padding:11px 13px;
 </style></head>
 <body><main>
 <span class="badge">CatPaw AI Factory · P3 CONTROL PLANE</span>
-<h1>四產線總控 v0.4</h1>
-<p>P3 控制面已接入：A 線可走真實 RunningHub 任務狀態機；B/D 尚未接 live adapter；C 線後端服務已就緒，下一步接 Editor v0.3。付費與發布仍由安全開關分離控制。</p>
+<h1>四產線總控 v0.7</h1>
+<p>P3 控制面已接入：A 線可走 RunningHub 真實任務；C 線已接音樂驅動 Smart Cut 與遠端素材剪輯；D 線已接 Shot DAG、逐鏡斷點續跑與整集合成；B 線仍待 live adapter。付費與發布仍由安全開關分離控制。</p>
 <div class="card"><strong>安全閘門：</strong> paid_enabled=false ｜ publish=pending ｜ 真實 RunningHub / PixVerse / OpenAI / Music provider 不會被呼叫。</div>
 <section class="card">
 <h2>P3｜四線真實自動化狀態</h2>
@@ -97,9 +97,11 @@ async function checkP3(){
       "\nMusic backend："+(j.music_service_ready?"READY":"NOT READY")+
       "\nA："+(p.A?.state||"-")+"｜自動到 "+(p.A?.autonomous_to||"-")+
       "\nB："+(p.B?.state||"-")+
-      "\nC："+(p.C?.state||"-")+
-      "\nD："+(p.D?.state||"-")+
+      "\nC："+(p.C?.state||"-")+"｜自動到 "+(p.C?.autonomous_to||"-")+
+      "\nD："+(p.D?.state||"-")+"｜自動到 "+(p.D?.autonomous_to||"-")+
       "\nA 可真跑："+j.can_run_A+
+      "\nC 可真跑："+j.can_run_C+
+      "\nD 可真跑："+j.can_run_D+
       "\n發布："+(j.publish_enabled?"ON":"OFF")+
       "\nRetry："+j.max_retries;
   }catch(e){
