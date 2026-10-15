@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CatPaw AI 剪輯師 v0.2</title>
+<title>CatPaw AI 剪輯師 v0.3</title>
 <style>
 body{font-family:system-ui;background:#0d1020;color:#fff;margin:0}
 .wrap{max-width:860px;margin:auto;padding:20px}
@@ -24,8 +24,20 @@ a{color:#9fdbff}
 </head>
 <body>
 <main class="wrap">
-<h1>✂️ CatPaw AI 剪輯師 <small>v0.2</small></h1>
+<h1>✂️ CatPaw AI 剪輯師 <small>v0.3</small></h1>
 <p>四線素材 → 排序 → 裁切 → 轉場 → 9:16 / 16:9 → MP4</p>
+
+<section class="card">
+<h2>0. 音訊工具</h2>
+<label>從影片擷取音樂 / 分析歌曲</label>
+<input id="audioSource" type="file" accept="video/*,audio/*">
+<div class="actions">
+<button class="secondary" onclick="extractAudio()">擷取 320k MP3</button>
+<button class="secondary" onclick="analyzeMusic()">分析 BPM / 高潮</button>
+</div>
+<div id="audioStatus" class="status">尚未分析。</div>
+<a id="audioDownload" style="display:none" target="_blank">開啟擷取音訊</a>
+</section>
 
 <section class="card">
 <h2>1. 匯入影片</h2>
@@ -62,8 +74,8 @@ a{color:#9fdbff}
 </section>
 
 <section class="card">
-<h2>v0.2 定位</h2>
-<p class="note">v0.2 已支援正式歌曲、30/60/275 秒輸出、原片音效混合、片頭片尾字卡，以及素材不足時自動循環填滿 Full MV。下一階段會加 AI 自動選鏡、BPM/副歌偵測與歌詞字幕時間軸。</p>
+<h2>v0.3 定位</h2>
+<p class="note">v0.3 新增從影片擷取 320k MP3、歌曲 BPM 粗估、高潮/副歌候選與能量峰值。既有 30/60/275 秒輸出、正式歌曲混音與片頭片尾字卡仍保留。下一步會把分析結果直接餵給 AI 選鏡與自動卡點。</p>
 <p><a href="index.html">← 回 CatPaw AI Studio</a></p>
 </section>
 </main>
@@ -99,6 +111,33 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","
 function setStart(i,v){items[i].start=Number(v||0)}
 function setEnd(i,v){items[i].end=v===""?"":Number(v)}
 function move(i,delta){const j=i+delta;if(j<0||j>=items.length)return;[items[i],items[j]]=[items[j],items[i]];draw()}
+
+async function extractAudio(){
+  const f=audioSource.files && audioSource.files[0];
+  if(!f){audioStatus.textContent="請先選影片或音訊。";return;}
+  const fd=new FormData();fd.append("file",f,f.name);fd.append("bitrate","320k");
+  audioStatus.textContent="音訊擷取中…";audioDownload.style.display="none";
+  try{
+    const r=await fetch(API+"/api/editor/extract-audio",{method:"POST",body:fd});
+    const j=await r.json();if(!r.ok)throw new Error(j.detail||"擷取失敗");
+    const url=new URL(j.audio_url,API).href;
+    audioDownload.href=url;audioDownload.style.display="inline";
+    audioStatus.textContent="完成｜"+j.duration+" 秒｜"+j.bitrate+" MP3";
+  }catch(e){audioStatus.textContent="失敗："+e.message;}
+}
+async function analyzeMusic(){
+  const f=audioSource.files && audioSource.files[0];
+  if(!f){audioStatus.textContent="請先選影片或音訊。";return;}
+  const fd=new FormData();fd.append("file",f,f.name);
+  audioStatus.textContent="歌曲分析中…";
+  try{
+    const r=await fetch(API+"/api/editor/analyze-music",{method:"POST",body:fd});
+    const j=await r.json();if(!r.ok)throw new Error(j.detail||"分析失敗");
+    const chorus=(j.chorus_candidates||[]).map(x=>x.start+"–"+x.end+"s").join("、")||"無";
+    const peaks=(j.peak_candidates||[]).slice(0,6).map(x=>x.time+"s").join("、")||"無";
+    audioStatus.textContent="長度："+j.duration+" 秒\nBPM 粗估："+(j.bpm_estimate||"無法估計")+"\n副歌/高潮候選："+chorus+"\n能量峰值："+peaks;
+  }catch(e){audioStatus.textContent="失敗："+e.message;}
+}
 
 async function renderEdit(){
   if(!items.length){status.textContent="請先選影片。";return;}
