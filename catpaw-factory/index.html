@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CatPaw AI Factory v0.3</title>
+<title>CatPaw AI Factory v0.4</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0b0f19;color:#eef2ff;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
 main{max-width:1000px;margin:auto;padding:20px 14px 70px}
@@ -16,10 +16,17 @@ button,a.btn{display:inline-block;border:0;border-radius:10px;padding:11px 13px;
 @media(max-width:720px){.grid{grid-template-columns:1fr}}
 </style></head>
 <body><main>
-<span class="badge">CatPaw AI Factory · P2 LOCKED</span>
-<h1>四產線總控 v0.3</h1>
-<p>所有產線目前只跑 Mock。付費 provider = OFF，自動發布 = OFF，實際成本 = NT$0。</p>
+<span class="badge">CatPaw AI Factory · P3 CONTROL PLANE</span>
+<h1>四產線總控 v0.4</h1>
+<p>P3 控制面已接入：A 線可走真實 RunningHub 任務狀態機；B/D 尚未接 live adapter；C 線後端服務已就緒，下一步接 Editor v0.3。付費與發布仍由安全開關分離控制。</p>
 <div class="card"><strong>安全閘門：</strong> paid_enabled=false ｜ publish=pending ｜ 真實 RunningHub / PixVerse / OpenAI / Music provider 不會被呼叫。</div>
+<section class="card">
+<h2>P3｜四線真實自動化狀態</h2>
+<p>這裡直接讀 Worker 的 P3 控制面，不再只顯示本機 Mock。</p>
+<button onclick="checkP3()">檢查 P3 狀態</button>
+<div id="p3Status" class="status">尚未檢查。</div>
+</section>
+
 <section class="card">
 <h2>P2｜A 產線 RunningHub 單筆真實測片</h2>
 <p>目前規則：只允許 A 產線、RunningHub、5 秒、一次 1 筆、完成後停在人工審核；自動發布永遠關閉。</p>
@@ -76,6 +83,30 @@ function renderHistory(){
 }
 function clearHistory(){CATPAW_FACTORY.clear();renderHistory();$("summary").textContent="本機 Mock 紀錄已清除。"}
 
+const P3_STATUS_URL="https://threads-scheduler.gogototo24.workers.dev/api/factory/p3/status";
+async function checkP3(){
+  $("p3Status").textContent="檢查中…";
+  try{
+    const r=await fetch(P3_STATUS_URL,{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const p=j.pipelines||{};
+    $("p3Status").textContent=
+      "P3 enabled："+j.enabled+
+      "\nDatabase："+(j.database_ready?"READY":"NOT READY")+
+      "\nMusic backend："+(j.music_service_ready?"READY":"NOT READY")+
+      "\nA："+(p.A?.state||"-")+"｜自動到 "+(p.A?.autonomous_to||"-")+
+      "\nB："+(p.B?.state||"-")+
+      "\nC："+(p.C?.state||"-")+
+      "\nD："+(p.D?.state||"-")+
+      "\nA 可真跑："+j.can_run_A+
+      "\n發布："+(j.publish_enabled?"ON":"OFF")+
+      "\nRetry："+j.max_retries;
+  }catch(e){
+    $("p3Status").textContent="P3 狀態讀取失敗："+e.message;
+  }
+}
+
 const P2_STATUS_URL="https://threads-scheduler.gogototo24.workers.dev/api/factory/p2/status";
 async function checkP2(){
   $("p2Status").textContent="檢查中…";
@@ -123,5 +154,5 @@ async function copyP2Payload(){
   if(t.startsWith("尚未")) buildP2Payload();
   try{await navigator.clipboard.writeText($("p2Payload").textContent);alert("P2 Payload 已複製")}catch{alert("請長按 JSON 手動複製")}
 }
-buildCards();renderHistory();checkP2();
+buildCards();renderHistory();checkP3();checkP2();
 </script></body></html>
